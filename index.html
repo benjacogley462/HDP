@@ -284,7 +284,7 @@
 
                     <!-- Vista Unirse -->
                     <div id="joinRoomUI" class="hidden space-y-3 pt-2">
-                        <input type="text" id="joinRoomInput" placeholder="Ingresá Código de Sala (Ej: HDP8392)" class="w-full bg-black border border-zinc-700 rounded-xl px-4 py-2.5 text-xs text-white uppercase font-bold focus:outline-none focus:border-hdpBlue">
+                        <input type="text" id="joinRoomInput" placeholder="Ingresá Código de Sala o Pegá Enlace" class="w-full bg-black border border-zinc-700 rounded-xl px-4 py-2.5 text-xs text-white uppercase font-bold focus:outline-none focus:border-hdpBlue">
                         <button onclick="connectToOnlineRoom()" class="w-full py-2.5 bg-hdpBlue hover:bg-blue-600 text-white font-bold rounded-xl text-xs uppercase">
                             Conectar a la Sala
                         </button>
@@ -436,127 +436,121 @@
        ========================================================================== -->
     <script>
         /* --------------------------------------------------------------------------
-           1. MAZOS OFICIALES Y LITERALES DEL JUEGO H.D.P. (ARGENTINA)
+           1. CARTAS OFICIALES LITERALES SIN CENSURA
            -------------------------------------------------------------------------- */
         const BLACK_CARDS = [
-            { text: "Las manos amputadas de Perón se usaron para _____.", pick: 1 },
-            { text: "Para mi cumpleaños pedí un deseo y me trajeron _____.", pick: 1 },
-            { text: "¿Qué escondía el abuelo bajo el colchón cuando falleció?", pick: 1 },
-            { text: "En el grupo de WhatsApp de la familia mandaron por error _____.", pick: 1 },
-            { text: "El secreto para mantener viva la llama de la pasión es _____.", pick: 1 },
-            { text: "Llegó la policía a la fiesta y me agarró justo con _____.", pick: 1 },
-            { text: "En Santiago del Estero no hay nada más tradicional que _____.", pick: 1 },
-            { text: "¿Qué fue lo que arruinó por completo la cena de Nochebuena?", pick: 1 },
-            { text: "En el colectivo a las 7 de la mañana se siente un fuerte olor a _____.", pick: 1 },
-            { text: "La verdadera razón por la que me echaron del trabajo fue _____.", pick: 1 },
-            { text: "No hay nada más representativo de la cultura argentina que _____.", pick: 1 },
-            { text: "El nuevo plan social va destinado a financiar _____.", pick: 1 },
-            { text: "¿Qué le regalé a mi suegra para que sufra un infarto?", pick: 1 },
             { text: "Aceptaría ir preso 5 años si a cambio me garantizan _____.", pick: 1 },
-            { text: "Lo primero que decretaría si fuera Presidente por un día es _____.", pick: 1 },
-            { text: "Mi psicólogo se quedó mudo y me dio el alta cuando le hablé de _____.", pick: 1 },
-            { text: "Un asado con amigos se echa a perder automáticamente si aparece _____.", pick: 1 },
-            { text: "¿Por qué estoy encerrado llorando en el baño del boliche?", pick: 1 },
-            { text: "Para curar la resaca mortal lo único efectivo es _____.", pick: 1 },
-            { text: "Llegué de sorpresa a casa de mis papás y los encontré haciendo _____.", pick: 1 }
+            { text: "Mi vida sexual en este momento se puede resumir en _____.", pick: 1 },
+            { text: "Lo único que puede salvar la economía de Argentina es _____.", pick: 1 },
+            { text: "Para mi cumpleaños pedí un deseo y me trajeron _____.", pick: 1 },
+            { text: "No hay nada más lindo que levantarse un domingo por la mañana y ver _____.", pick: 1 },
+            { text: "Lo que realmente pasó en la Quinta de Olivos fue _____.", pick: 1 },
+            { text: "Mi secreto mejor guardado para levantar en el boliche es _____.", pick: 1 },
+            { text: "Se filtró un video prohibido de la Scaloneta haciendo _____.", pick: 1 },
+            { text: "La verdadera razón por la cual me echaron del grupo de WhatsApp fue _____.", pick: 1 },
+            { text: "Un buen asado no está completo sin _____.", pick: 1 },
+            { text: "Lo que me mantiene despierto a las 3 de la mañana es pensar en _____.", pick: 1 },
+            { text: "Si ganara el Quini 6, lo primero que me compraría sería _____.", pick: 1 }
         ];
 
         const WHITE_CARDS = [
             "Las manos de Perón",
-            "Dos niñas de 7 años",
-            "Coger con una línea de falopa en la punta de la verga",
-            "Esperar a que cumpla los 18",
-            "Un enano tirando bombas de humo en un boliche",
             "La siesta santiagueña con un familiar",
-            "Mandar audios de 5 minutos a las 3 de la mañana en pedo",
-            "Una Manaos de uva caliente al sol",
-            "El fantasma de la B comiéndose una milanesa",
             "Un volquete lleno de cadáveres y fetos",
-            "Un político prometiendo asfaltar la misma calle por quinta vez",
-            "Discutir de geopolítica internacional con un remisero falopeado",
-            "Un fernecito preparado en una botella de plástico cortada con los dientes",
-            "Gente de 80 años teniendo sexo desenfrenado",
-            "Un jubilado linchando a un chorro en la noche",
-            "Comer empanadas de aire en una marcha piquetera",
-            "Un tío borracho desnudándose en la cena de Navidad",
-            "El espíritu de Ricardo Fort bajando en helicóptero",
-            "Llegar tres horas tarde al velorio y pedir empanadas",
             "Un pastor evangélico cobrando el diezmo con Mercado Pago",
+            "Esperar a que cumpla los 18",
+            "Una Manaos de uva caliente al sol",
+            "Irse a vivir al Uritorco a tomar ayahuasca con OSDE",
             "Gritar '¡Goooool!' durante un minuto de silencio",
-            "Hacerse el lisiado para conseguir asiento en el colectivo",
-            "Ponerle hielo al vino en cartón mientras discutís la herencia",
-            "Mentir impunemente diciendo que sos médico en Tinder",
             "Un fisura pidiendo la hora con una navaja en la mano",
-            "Pedir descuento en el servicio funerario de tu abuela",
+            "Comer empanadas de aire en una marcha piquetera",
+            "Un fernecito preparado en una botella de plástico cortada con los dientes",
             "Robarse los saquitos de edulcorante del bar de la esquina",
-            "Bailar cumbia villera en el baño de un velatorio",
-            "Irse a vivir al Uritorco a tomar té de hongos con OSDE",
-            "Un señor desnudo en la calle corriendo sin rumbo"
+            "Un enano vestido de Messi bailando cumbia",
+            "Mandar un 'te amo' por error a la suegra",
+            "Cagar en un balde en una obra en construcción",
+            "Hacerle un pete al trapito para que no te raye el auto",
+            "Dos niñas de 7 años",
+            "Un abuelo confundido en un privado de Pinar de Rocha",
+            "El cadáver congelado de Walt Disney",
+            "Una sobredosis de Viagra en un albergue transitorio",
+            "La dentadura postiza de tu abuela en un vaso con Fernet",
+            "Sopa de caracol en la villa 31"
         ];
 
         /* --------------------------------------------------------------------------
-           2. ESTADO GLOBAL DE LA PARTIDA (MODO TÉCNICA)
+           2. ESTADO GLOBAL Y VARIABLES
            -------------------------------------------------------------------------- */
         let gameState = {
-            connType: 'pass',
+            connType: 'pass', // 'pass' o 'online'
+            roomId: null,
             players: [],
-            cantoraIndex: 0,
             currentRound: 1,
+            cantoraIndex: 0,
             blackDeck: [],
             whiteDeck: [],
             currentBlackCard: null,
             submissions: [],
             votes: {},
-            phase: 'SETUP',
+            phase: 'SETUP', // 'SETUP', 'SUBMITTING', 'READING', 'VOTING', 'ROUND_RESULTS', 'GAME_OVER'
             submittingPlayerIndex: 0,
             votingPlayerIndex: 0,
-            readingIndex: 0,
             selectedCardHandIndex: null,
             soundEnabled: true,
             musicPlaying: false,
-            roomId: null
+            readingIndex: 0
         };
 
         let passPlayerNames = ["Jugador 2", "Jugador 3"];
+        let onlinePeers = [];
         let peer = null;
         let conn = null;
-        let onlinePeers = [];
+        let peerConns = [];
+        let isHost = false;
         let musicInterval = null;
 
         /* --------------------------------------------------------------------------
-           3. CONFIGURACIÓN DE JUGADORES LOCALES Y VALIDACIÓN DE MÍNIMO 3 JUGADORES
+           3. INICIALIZACIÓN Y CONFIGURACIÓN DE JUGADORES LOCALES
            -------------------------------------------------------------------------- */
+        document.addEventListener('DOMContentLoaded', () => {
+            renderPassPlayerInputs();
+            
+            // Auto-detectar código de sala desde la URL si viene por enlace
+            const urlParams = new URLSearchParams(window.location.search);
+            const roomParam = urlParams.get('room');
+            if (roomParam) {
+                selectConnType('online');
+                document.getElementById('joinRoomInput').value = roomParam;
+                showJoinRoomInput();
+            }
+        });
+
         function renderPassPlayerInputs() {
             const container = document.getElementById('passPlayersInputs');
             if (!container) return;
-            container.innerHTML = '';
-
-            passPlayerNames.forEach((name, index) => {
-                const div = document.createElement('div');
-                div.className = 'flex items-center gap-2';
-                div.innerHTML = `
+            
+            container.innerHTML = passPlayerNames.map((name, index) => `
+                <div class="flex items-center gap-2">
                     <input type="text" value="${name}" onchange="updatePassPlayerName(${index}, this.value)" 
                         placeholder="Jugador ${index + 2}" 
-                        class="flex-grow bg-zinc-900 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-white font-bold focus:outline-none focus:border-hdpRed">
+                        class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-white font-bold focus:outline-none focus:border-hdpRed">
                     ${passPlayerNames.length > 2 ? `
-                        <button onclick="removeHumanPlayerInput(${index})" class="p-2 text-red-500 hover:text-red-400 text-xs">
+                        <button onclick="removeHumanPlayerInput(${index})" class="p-2 text-zinc-500 hover:text-hdpRed transition">
                             <i class="fas fa-trash-alt"></i>
                         </button>
                     ` : ''}
-                `;
-                container.appendChild(div);
-            });
+                </div>
+            `).join('');
         }
 
         function addHumanPlayerInput() {
-            if (passPlayerNames.length < 5) {
+            if (passPlayerNames.length < 8) {
                 passPlayerNames.push(`Jugador ${passPlayerNames.length + 2}`);
                 renderPassPlayerInputs();
             }
         }
 
         function removeHumanPlayerInput(index) {
-            // No permitir menos de 2 en passPlayerNames (lo cual junto con P1 suma mínimo 3 jugadores)
             if (passPlayerNames.length > 2) {
                 passPlayerNames.splice(index, 1);
                 renderPassPlayerInputs();
@@ -567,8 +561,27 @@
             passPlayerNames[index] = value.trim() || `Jugador ${index + 2}`;
         }
 
+        function selectConnType(type) {
+            gameState.connType = type;
+            const btnPass = document.getElementById('btnConnPass');
+            const btnOnline = document.getElementById('btnConnOnline');
+            const passSec = document.getElementById('passConfigSection');
+            const onlineSec = document.getElementById('onlineConfigSection');
+
+            if (type === 'pass') {
+                btnPass.className = 'p-4 border-2 border-hdpRed bg-hdpRed/20 text-white font-bold rounded-2xl flex flex-col items-center gap-2 transition';
+                btnOnline.className = 'p-4 border border-zinc-700 bg-zinc-800 text-zinc-400 font-bold rounded-2xl flex flex-col items-center gap-2 transition';
+                passSec.classList.remove('hidden');
+                onlineSec.classList.add('hidden');
+            } else {
+                btnOnline.className = 'p-4 border-2 border-hdpBlue bg-hdpBlue/20 text-white font-bold rounded-2xl flex flex-col items-center gap-2 transition';
+                passSec.classList.add('hidden');
+                onlineSec.classList.remove('hidden');
+            }
+        }
+
         /* --------------------------------------------------------------------------
-           4. INICIO DE PARTIDA Y REPARTO DE 10 CARTAS ÚNICAS
+           4. INICIO Y SINCRONIZACIÓN DE PARTIDA
            -------------------------------------------------------------------------- */
         function startGame() {
             const p1Name = document.getElementById('p1Name').value.trim() || "Jugador 1";
@@ -585,24 +598,26 @@
                 });
             } else {
                 // Modo Online
-                gameState.players = [{ id: 0, name: p1Name, score: 0, hand: [] }];
-                onlinePeers.forEach((pName, i) => {
-                    gameState.players.push({
-                        id: i + 1,
-                        name: pName,
-                        score: 0,
-                        hand: []
+                if (isHost) {
+                    gameState.players = [{ id: 0, name: p1Name, score: 0, hand: [], peerId: 'host' }];
+                    onlinePeers.forEach((pObj, i) => {
+                        gameState.players.push({
+                            id: i + 1,
+                            name: pObj.name,
+                            score: 0,
+                            hand: [],
+                            peerId: pObj.peerId
+                        });
                     });
-                });
+                }
             }
 
-            // REGLA CRÍTICA: NO PERMITIR JUGAR DE A 2
+            // REGLA CRÍTICA: MÍNIMO 3 JUGADORES
             if (gameState.players.length < 3) {
-                alert("⚠️ ¡Atención! El Modo Técnica de H.D.P. requiere como mínimo 3 jugadores para mantener la votación anónima y competitiva.");
+                alert("⚠️ ¡Atención! El Modo Técnica requiere como mínimo 3 jugadores para mantener la votación anónima.");
                 return;
             }
 
-            // Iniciar música chill bar
             if (!gameState.musicPlaying) {
                 toggleMusic();
             }
@@ -612,7 +627,7 @@
             gameState.cantoraIndex = 0;
             gameState.currentRound = 1;
 
-            // Repartir exactamente 10 cartas blancas a cada jugador
+            // Repartir 10 cartas a cada uno
             gameState.players.forEach(player => {
                 player.hand = [];
                 for (let i = 0; i < 10; i++) {
@@ -623,7 +638,43 @@
             });
 
             document.getElementById('setupScreen').classList.add('hidden');
+
+            if (gameState.connType === 'online' && isHost) {
+                broadcastToClients({
+                    type: 'GAME_START',
+                    state: gameState
+                });
+            }
+
             startRound();
+        }
+
+        function startRound() {
+            if (gameState.blackDeck.length === 0) {
+                gameState.blackDeck = shuffle(BLACK_CARDS);
+            }
+
+            gameState.currentBlackCard = gameState.blackDeck.pop();
+            gameState.submissions = [];
+            gameState.votes = {};
+            gameState.phase = 'SUBMITTING';
+            gameState.submittingPlayerIndex = 0;
+            gameState.votingPlayerIndex = 0;
+            gameState.selectedCardHandIndex = null;
+
+            if (gameState.connType === 'pass') {
+                showPassTurnModal(gameState.players[0].name);
+            }
+
+            renderUI();
+        }
+
+        function broadcastToClients(data) {
+            peerConns.forEach(c => {
+                if (c && c.open) {
+                    c.send(data);
+                }
+            });
         }
 
         /* --------------------------------------------------------------------------
@@ -632,7 +683,6 @@
         function toggleMusic() {
             gameState.musicPlaying = !gameState.musicPlaying;
             const btn = document.getElementById('btnMusicToggle');
-            const icon = document.getElementById('musicIcon');
 
             if (gameState.musicPlaying) {
                 if (btn) btn.classList.add('bg-hdpYellow', 'text-black');
@@ -647,7 +697,6 @@
             stopBarMusicLoop();
             try {
                 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                // Acordes relajados tipo bar / jazz / synthwave
                 const notes = [130.81, 164.81, 196.00, 220.00, 146.83, 174.61, 220.00, 261.63];
                 let step = 0;
 
@@ -680,118 +729,8 @@
             }
         }
 
-        function removeHumanPlayerInput(index) {
-            if (passPlayerNames.length > 1) {
-                passPlayerNames.splice(index, 1);
-                renderPassPlayerInputs();
-            }
-        }
-
-        function updatePassPlayerName(index, value) {
-            passPlayerNames[index] = value.trim() || `Jugador ${index + 2}`;
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            renderPassPlayerInputs();
-            // Verificar si hay sala en la URL
-            const urlParams = new URLSearchParams(window.location.search);
-            const roomParam = urlParams.get('room');
-            if (roomParam) {
-                selectConnType('online');
-                document.getElementById('joinRoomInput').value = roomParam;
-                showJoinRoomInput();
-            }
-        });
-
-        function selectConnType(type) {
-            gameState.connType = type;
-            const btnPass = document.getElementById('btnConnPass');
-            const btnOnline = document.getElementById('btnConnOnline');
-            const passSec = document.getElementById('passConfigSection');
-            const onlineSec = document.getElementById('onlineConfigSection');
-
-            if (type === 'pass') {
-                btnPass.className = 'p-4 border-2 border-hdpRed bg-hdpRed/20 text-white font-bold rounded-2xl flex flex-col items-center gap-2 transition';
-                btnOnline.className = 'p-4 border border-zinc-700 bg-zinc-800 text-zinc-400 font-bold rounded-2xl flex flex-col items-center gap-2 transition';
-                passSec.classList.remove('hidden');
-                onlineSec.classList.add('hidden');
-            } else {
-                btnOnline.className = 'p-4 border-2 border-hdpBlue bg-hdpBlue/20 text-white font-bold rounded-2xl flex flex-col items-center gap-2 transition';
-                passSec.classList.add('hidden');
-                onlineSec.classList.remove('hidden');
-            }
-        }
-
         /* --------------------------------------------------------------------------
-           4. INICIO DE PARTIDA Y REPARTO DE 10 CARTAS ÚNICAS
-           -------------------------------------------------------------------------- */
-        function startGame() {
-            const p1Name = document.getElementById('p1Name').value.trim() || "Jugador 1";
-
-            if (gameState.connType === 'pass') {
-                gameState.players = [{ id: 0, name: p1Name, score: 0, hand: [] }];
-                passPlayerNames.forEach((name, i) => {
-                    gameState.players.push({
-                        id: i + 1,
-                        name: name.trim() || `Jugador ${i + 2}`,
-                        score: 0,
-                        hand: []
-                    });
-                });
-            } else {
-                // Modo Online
-                gameState.players = [{ id: 0, name: p1Name, score: 0, hand: [] }];
-                onlinePeers.forEach((pName, i) => {
-                    gameState.players.push({
-                        id: i + 1,
-                        name: pName,
-                        score: 0,
-                        hand: []
-                    });
-                });
-            }
-
-            gameState.blackDeck = shuffle(BLACK_CARDS);
-            gameState.whiteDeck = shuffle(WHITE_CARDS);
-            gameState.cantoraIndex = 0;
-            gameState.currentRound = 1;
-
-            // Repartir exactamente 10 cartas blancas a cada jugador (¡SIN RECARGAR DESPUÉS!)
-            gameState.players.forEach(player => {
-                player.hand = [];
-                for (let i = 0; i < 10; i++) {
-                    if (gameState.whiteDeck.length > 0) {
-                        player.hand.push(gameState.whiteDeck.pop());
-                    }
-                }
-            });
-
-            document.getElementById('setupScreen').classList.add('hidden');
-            startRound();
-        }
-
-        function startRound() {
-            if (gameState.blackDeck.length === 0) {
-                gameState.blackDeck = shuffle(BLACK_CARDS);
-            }
-
-            gameState.currentBlackCard = gameState.blackDeck.pop();
-            gameState.submissions = [];
-            gameState.votes = {};
-            gameState.phase = 'SUBMITTING';
-            gameState.submittingPlayerIndex = 0;
-            gameState.votingPlayerIndex = 0;
-            gameState.selectedCardHandIndex = null;
-
-            if (gameState.connType === 'pass') {
-                showPassTurnModal(gameState.players[0].name);
-            }
-
-            renderUI();
-        }
-
-        /* --------------------------------------------------------------------------
-           5. UTILIDADES (SONIDO, SHUFFLE, MODALES)
+           6. UTILIDADES (SONIDO, SHUFFLE, MODALES)
            -------------------------------------------------------------------------- */
         function shuffle(array) {
             let arr = [...array];
@@ -890,7 +829,7 @@
         }
 
         /* --------------------------------------------------------------------------
-           6. FLUJO DEL JUEGO: TIRAR, LEER (CANTORA), VOTAR Y PUNTAJES
+           7. FLUJO DEL JUEGO: TIRAR, LEER (CANTORA), VOTAR Y PUNTAJES
            -------------------------------------------------------------------------- */
         function selectCardFromHand(index) {
             gameState.selectedCardHandIndex = index;
@@ -902,7 +841,6 @@
             if (gameState.selectedCardHandIndex === null) return;
             const currentPlayer = gameState.players[gameState.submittingPlayerIndex];
             
-            // Retirar carta de la mano (¡Se descarta permanentemente y no se repone!)
             const playedCard = currentPlayer.hand.splice(gameState.selectedCardHandIndex, 1)[0];
 
             gameState.submissions.push({
@@ -916,10 +854,7 @@
             gameState.submittingPlayerIndex++;
 
             if (gameState.submittingPlayerIndex >= gameState.players.length) {
-                // Todos tiraron. Mezclar submissions para anonimato
                 gameState.submissions = shuffle(gameState.submissions);
-                
-                // Iniciar fase de lectura por La Cantora
                 gameState.phase = 'READING';
                 gameState.readingIndex = 0;
                 showCantoraReadingModal();
@@ -944,7 +879,6 @@
             renderUI();
         }
 
-        /* FASE DE LECTURA DE LA CANTORA */
         function showCantoraReadingModal() {
             const modal = document.getElementById('cantoraReadingModal');
             const cantora = gameState.players[gameState.cantoraIndex];
@@ -965,7 +899,6 @@
                 updateReadingCardDisplay();
                 playBeep(480, 0.08);
             } else {
-                // Termino de leer todas las cartas. Pasar a votación.
                 document.getElementById('cantoraReadingModal').classList.add('hidden');
                 gameState.phase = 'VOTING';
                 gameState.votingPlayerIndex = 0;
@@ -976,12 +909,10 @@
             }
         }
 
-        /* FASE DE VOTACIÓN */
         function voteForCard(submissionIndex) {
             const currentVoter = gameState.players[gameState.votingPlayerIndex];
             const targetSub = gameState.submissions[submissionIndex];
 
-            // Prohibido votarse a sí mismo
             if (targetSub.playerId === currentVoter.id) {
                 alert("No podés votar por tu propia carta.");
                 return;
@@ -1029,7 +960,6 @@
 
             renderUI();
 
-            // Verificar si los jugadores se quedaron sin cartas en mano (Fin del juego tras 10 rondas o agotamiento de mano)
             setTimeout(() => {
                 const hasCardsLeft = gameState.players.some(p => p.hand.length > 0);
                 if (!hasCardsLeft) {
@@ -1048,7 +978,6 @@
             const winnerText = document.getElementById('winnerText');
             const finalBoard = document.getElementById('finalScoreboard');
 
-            // Encontrar al ganador con mayor puntaje
             let bestScore = -1;
             let winners = [];
             gameState.players.forEach(p => {
@@ -1078,7 +1007,7 @@
         }
 
         /* --------------------------------------------------------------------------
-           7. RENDERIZADO VISUAL DINÁMICO DE LA INTERFAZ
+           8. RENDERIZADO VISUAL DINÁMICO DE LA INTERFAZ
            -------------------------------------------------------------------------- */
         function renderUI() {
             const scoreboardList = document.getElementById('scoreboardList');
@@ -1179,11 +1108,10 @@
         }
 
         /* --------------------------------------------------------------------------
-           8. MULTIJUGADOR ONLINE Y SALAS P2P CON MANEJO SEGURO DE WEBSOCKETS
+           9. MULTIJUGADOR ONLINE Y SALAS P2P
            -------------------------------------------------------------------------- */
         function isWebSocketAllowed() {
             try {
-                // Verificar si el entorno iFrame / Canvas bloquea la creación de WebSockets
                 const testWs = new WebSocket('wss://echo.websocket.org');
                 testWs.close();
                 return true;
@@ -1221,9 +1149,7 @@
                         width: 120,
                         height: 120
                     });
-                } catch (e) {
-                    console.warn("QR code generator warning:", e);
-                }
+                } catch (e) {}
             }
 
             try {
@@ -1253,11 +1179,9 @@
                 });
 
                 peer.on('error', (err) => {
-                    console.warn("PeerJS connection issue caught:", err);
                     showWebSocketBlockedWarning();
                 });
             } catch (err) {
-                console.warn("SecurityError caught while opening PeerJS connection:", err);
                 showWebSocketBlockedWarning();
             }
         }
@@ -1320,7 +1244,6 @@
                 });
 
                 peer.on('error', (err) => {
-                    console.warn("PeerJS Client Error:", err);
                     showWebSocketBlockedWarning();
                 });
             } catch (err) {
