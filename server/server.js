@@ -238,6 +238,7 @@ function handle(ws, msg) {
 }
 const server=http.createServer((req,res)=>{
   const pathname=new URL(req.url,'http://localhost').pathname;
+  if(pathname==='/health') { res.writeHead(200,{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'}); return res.end(JSON.stringify({ok:true,service:'hdp-servidor'})); }
   const safe=pathname==='/'?'/index.html':pathname;
   const full=path.normalize(path.join(PUBLIC_DIR,safe));
   if(!full.startsWith(PUBLIC_DIR)){res.writeHead(403);return res.end('Forbidden');}
