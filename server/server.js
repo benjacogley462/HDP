@@ -128,9 +128,9 @@ const code = () => crypto.randomBytes(3).toString('hex').toUpperCase();
 function send(ws, type, data={}) { if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({type, ...data})); }
 function publicState(room, viewerId=null) {
   const g = room.game;
-  if (!g) return {roomCode:room.code, players:room.players.map(p=>({id:p.id,name:p.name,score:p.score,connected:p.connected})), phase:'LOBBY', round:0, cantorId:null, blackCard:null, submissions:[], submittedIds:[], votedIds:[], message:'Esperando que el anfitrión inicie la partida.'};
+  if (!g) return {roomCode:room.code, players:room.players.map(p=>({id:p.id,name:p.name,score:p.score,connected:p.connected})), phase:'LOBBY', round:0, cantorId:null, blackCard:null, submissions:[], submittedIds:[], votedIds:[], deck:room.deck, isHost:viewerId===room.hostId, message:'Esperando que el anfitrión configure el mazo e inicie la partida.'};
   return {
-    roomCode:room.code, phase:g.phase, round:g.round, cantorId:g.players[g.cantorIndex]?.id,
+    roomCode:room.code, phase:g.phase, round:g.round, cantorId:g.players[g.cantorIndex]?.id, isHost:viewerId===room.hostId,
     blackCard:g.blackCard, players:g.players.map(p=>({id:p.id,name:p.name,score:p.score,connected:p.connected,handCount:p.hand.length})),
     myHand:g.players.find(p=>p.id===viewerId)?.hand || [],
     submissions:g.submissions.map((s,i)=>({index:i,card:s.card,ownerId:g.phase==='READING' || g.phase==='VOTING' || g.phase==='RESULTS' ? s.ownerId : null, votes:g.phase==='RESULTS'?s.votes:undefined})),
@@ -144,7 +144,9 @@ function broadcast(room) {
 function error(ws, message) { send(ws,'ERROR',{message}); }
 function startGame(room) {
   if (room.players.length < MIN_PLAYERS) throw new Error('Se necesitan al menos 3 jugadores.');
-  const blackDeck = shuffle(BLACK), whiteDeck = shuffle(WHITE);
+  const blackDeck = shuffle(room.deck.black), whiteDeck = shuffle(room.deck.white);
+  if (whiteDeck.length < room.players.length * 10) throw new Error(`El mazo necesita al menos ${room.players.length * 10} cartas blancas para repartir 10 a cada jugador.`);
+  if (!blackDeck.length) throw new Error('Agregá al menos una consigna negra.');
   room.game = {
     players: room.players.map(p=>({...p, score:0, hand:whiteDeck.splice(0,10)})),
     blackDeck, whiteDeck, round:1, cantorIndex:0, blackCard:null,
@@ -168,7 +170,7 @@ function handle(ws, msg) {
       const name=String(d.name||'Jugador').trim().slice(0,18)||'Jugador';
       let c=code(); while(rooms.has(c)) c=code();
       const p={id:crypto.randomUUID(),name,score:0,hand:[],ws,connected:true};
-      const room={code:c,hostId:p.id,players:[p],game:null,created:Date.now()};
+      const room={code:c,hostId:p.id,players:[p],game:null,deck:{black:[...BLACK],white:[...WHITE]},created:Date.now()};
       rooms.set(c,room); ws.roomCode=c; ws.playerId=p.id;
       send(ws,'JOINED',{roomCode:c,playerId:p.id,host:true}); broadcast(room); return;
     }
@@ -183,6 +185,16 @@ function handle(ws, msg) {
     }
     const room=rooms.get(ws.roomCode); if(!room) return error(ws,'No estás en una sala.');
     const p=player(room,ws.playerId); if(!p) return error(ws,'No se encontró tu jugador.');
+    if(d.type==='SET_DECK') {
+      if(room.hostId!==p.id) return error(ws,'Solo el anfitrión puede editar el mazo.');
+      if(room.game) return error(ws,'El mazo queda bloqueado cuando empieza la partida.');
+      const clean = value => Array.isArray(value) ? value.map(x=>String(x).trim()).filter(Boolean) : [];
+      const black=clean(d.black), white=clean(d.white);
+      if(!black.length || !white.length) return error(ws,'El mazo debe tener al menos una carta negra y una blanca.');
+      const bytes=Buffer.byteLength(JSON.stringify({black,white}),'utf8');
+      if(bytes>500000) return error(ws,'El mazo es demasiado grande (máximo 500 KB).');
+      room.deck={black,white}; broadcast(room); return;
+    }
     if(d.type==='START') {
       if(room.hostId!==p.id) return error(ws,'Solo quien creó la sala puede iniciar.');
       startGame(room); broadcast(room); return;
