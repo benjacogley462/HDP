@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#09090b"><title>H.D.P. — Hasta Dónde Podés</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand"><span class="logo">H.D.P.</span><div><strong>HASTA DÓNDE PODÉS</strong><small>JUEGO DE CARTAS · EDICIÓN COMUNITARIA</small></div></div>
+  <div id="topStatus" class="top-status">Preparado para jugar</div>
+  <button class="btn secondary" id="rulesBtn">Reglas</button>
+</header>
+<main>
+<section id="setup" class="setup panel">
+  <div class="hero"><p class="eyebrow">HUMOR NEGRO · AMIGOS · CAOS</p><h1>¿HASTA DÓNDE<br><em>PODÉS</em> LLEGAR?</h1><p>Completá la consigna. Bancate las respuestas. Elegí la peor… o la mejor.</p></div>
+  <div class="setup-grid">
+    <div class="field"><label for="playerName">Tu nombre</label><input id="playerName" maxlength="18" value="Jugador 1"></div>
+    <div class="field"><label for="mode">Modo de juego</label><select id="mode"><option value="local">Pasa y juega · mismo dispositivo</option><option value="online">Online · salas y códigos</option></select></div>
+  </div>
+  <div id="localConfig" class="field"><label>Nombres para pasa y juega (3–8 personas)</label><div id="localNames" class="name-list"></div><button class="btn secondary" id="addName">+ Agregar jugador</button></div>
+  <div id="onlineConfig" class="hidden">
+    <div class="field"><label for="serverUrl">Servidor online (WebSocket)</label><input id="serverUrl" placeholder="wss://tu-backend.onrender.com" autocomplete="url"><small>En local podés usar ws://localhost:8080. El backend está incluido en el proyecto.</small></div>
+    <div class="field"><label for="roomCode">Código de sala (para unirse)</label><input id="roomCode" maxlength="8" placeholder="Ej. A1B2C3"></div>
+    <div class="online-actions"><button class="btn primary" id="createRoom">Crear sala</button><button class="btn secondary" id="joinRoom">Unirse a sala</button></div>
+    <div id="roomInfo" class="room-info hidden"></div>
+  </div>
+  <button class="btn primary big" id="startLocal">Empezar partida</button>
+  <p class="fineprint">Entre 3 y 8 jugadores · 10 cartas por persona · las cartas jugadas no se reponen.</p>
+</section>
+
+<section id="game" class="hidden">
+  <div class="game-head panel"><div><span class="pill" id="roundLabel">RONDA 1</span><span class="pill gold" id="cantorLabel">CANTORA: —</span></div><div id="phaseLabel">Esperando jugadores</div></div>
+  <div id="scoreboard" class="scoreboard"></div>
+  <div class="table-layout">
+    <article class="black-card card"><div class="card-kicker">H.D.P. · CONSIGNA</div><div id="blackText" class="black-text">La consigna aparecerá acá.</div><div class="card-foot"><span>H.D.P.</span><span>COMPLETÁ</span></div></article>
+    <section class="table-panel panel"><div class="section-title">MESA DE RESPUESTAS <span id="submissionCount">0/0</span></div><p id="tableHint" class="muted">Las respuestas se mantienen ocultas hasta que todos jueguen.</p><div id="submissions" class="submissions"></div><div id="phaseActions" class="phase-actions"></div></section>
+  </div>
+  <section class="hand-panel panel"><div class="hand-head"><div><span class="eyebrow">TU MANO</span><h2 id="handTitle">Elegí una carta</h2></div><span class="pill" id="handCount">10 cartas</span></div><div id="hand" class="hand"></div><div id="handActions" class="hand-actions"></div></section>
+</section>
+</main>
+<div id="privacy" class="overlay hidden"><div class="modal"><div class="big-icon">◉</div><p class="eyebrow">TURNO PRIVADO</p><h2>Pasale la pantalla</h2><p>Ahora juega <strong id="privacyName">Jugador 2</strong>. Que nadie mire sus cartas.</p><button class="btn primary big" id="privacyOk">Ya tengo la pantalla</button></div></div>
+<div id="rules" class="overlay hidden"><div class="modal rules-modal"><button class="close" id="closeRules">×</button><p class="eyebrow">CÓMO SE JUEGA</p><h2>Reglas de la mesa</h2><ol><li>Cada jugador recibe <b>10 cartas blancas</b>. No se reponen.</li><li>La <b>Cantora</b> rota cada ronda y lee la consigna negra.</li><li>Todos eligen una carta blanca en secreto.</li><li>Cuando todos jugaron, se mezclan y la Cantora lee las respuestas una por una.</li><li>Todos votan la respuesta que prefieren. Está prohibido votarse a sí mismo.</li><li>La carta ganadora suma 1 punto. Si hay empate, cada respuesta empatada suma 1 punto.</li><li>La partida termina cuando todos se quedan sin cartas. Gana quien tenga más puntos.</li></ol><button class="btn primary" id="rulesOk">Entendido</button></div></div>
+<div id="toast" role="status" aria-live="polite"></div>
+<footer><span>H.D.P. · EDICIÓN COMUNITARIA</span><button id="deckBtn" class="text-btn">Editar mazo propio</button></footer>
+<div id="deckModal" class="overlay hidden"><div class="modal deck-modal"><button class="close" id="closeDeck">×</button><p class="eyebrow">PERSONALIZACIÓN</p><h2>Editar mazo propio</h2><p class="muted">Las cartas se guardan en este navegador. No se sincronizan entre jugadores online.</p><label for="blackEditor">Consignas negras (una por línea)</label><textarea id="blackEditor" rows="7"></textarea><label for="whiteEditor">Respuestas blancas (una por línea)</label><textarea id="whiteEditor" rows="10"></textarea><div class="online-actions"><button class="btn secondary" id="resetDeck">Restaurar mazo base</button><button class="btn primary" id="saveDeck">Guardar mazo</button></div></div></div>
+<script src="app.js"></script>
+</body></html>
