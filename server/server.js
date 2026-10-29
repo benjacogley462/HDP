@@ -158,7 +158,7 @@ function startGame(room) {
 function beginRound(room) {
   const g=room.game;
   if (g.players.every(p=>p.hand.length===0)) { g.phase='GAME_OVER'; g.message='¡Partida terminada!'; return; }
-  if (!g.blackDeck.length) g.blackDeck=shuffle(BLACK);
+  if (!g.blackDeck.length) g.blackDeck=shuffle(room.deck.black);
   g.blackCard=g.blackDeck.pop(); g.submissions=[]; g.votes={}; g.readingIndex=0;
   g.phase='SUBMITTING'; g.message='Cada jugador elige una carta blanca.';
 }
@@ -191,8 +191,6 @@ function handle(ws, msg) {
       const clean = value => Array.isArray(value) ? value.map(x=>String(x).trim()).filter(Boolean) : [];
       const black=clean(d.black), white=clean(d.white);
       if(!black.length || !white.length) return error(ws,'El mazo debe tener al menos una carta negra y una blanca.');
-      const bytes=Buffer.byteLength(JSON.stringify({black,white}),'utf8');
-      if(bytes>500000) return error(ws,'El mazo es demasiado grande (máximo 500 KB).');
       room.deck={black,white}; broadcast(room); return;
     }
     if(d.type==='START') {
