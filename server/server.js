@@ -191,6 +191,7 @@ function handle(ws, msg) {
       const clean = value => Array.isArray(value) ? value.map(x=>String(x).trim()).filter(Boolean) : [];
       const black=clean(d.black), white=clean(d.white);
       if(!black.length || !white.length) return error(ws,'El mazo debe tener al menos una carta negra y una blanca.');
+      if(Buffer.byteLength(JSON.stringify({black,white}),'utf8')>500000) return error(ws,'El mazo supera el tamaño máximo permitido de 500 KB.');
       room.deck={black,white}; broadcast(room); return;
     }
     if(d.type==='START') {
