@@ -26,7 +26,7 @@
     <div id="roomInfo" class="room-info hidden"></div>
   </div>
   <button class="btn primary big" id="startLocal">Empezar partida</button>
-  <p class="fineprint">Entre 3 y 8 jugadores · 10 cartas por persona · las cartas jugadas no se reponen.</p>
+  <p class="fineprint">Entre 3 y 8 jugadores · 10 cartas por persona · las cartas jugadas no se reponen. En online, el anfitrión configura el mazo de la sala antes de iniciar.</p>
 </section>
 
 <section id="game" class="hidden">
@@ -43,6 +43,6 @@
 <div id="rules" class="overlay hidden"><div class="modal rules-modal"><button class="close" id="closeRules">×</button><p class="eyebrow">CÓMO SE JUEGA</p><h2>Reglas de la mesa</h2><ol><li>Cada jugador recibe <b>10 cartas blancas</b>. No se reponen.</li><li>La <b>Cantora</b> rota cada ronda y lee la consigna negra.</li><li>Todos eligen una carta blanca en secreto.</li><li>Cuando todos jugaron, se mezclan y la Cantora lee las respuestas una por una.</li><li>Todos votan la respuesta que prefieren. Está prohibido votarse a sí mismo.</li><li>La carta ganadora suma 1 punto. Si hay empate, cada respuesta empatada suma 1 punto.</li><li>La partida termina cuando todos se quedan sin cartas. Gana quien tenga más puntos.</li></ol><button class="btn primary" id="rulesOk">Entendido</button></div></div>
 <div id="toast" role="status" aria-live="polite"></div>
 <footer><span>H.D.P. · EDICIÓN COMUNITARIA</span><button id="deckBtn" class="text-btn">Editar mazo propio</button></footer>
-<div id="deckModal" class="overlay hidden"><div class="modal deck-modal"><button class="close" id="closeDeck">×</button><p class="eyebrow">PERSONALIZACIÓN</p><h2>Editar mazo propio</h2><p class="muted">Las cartas se guardan en este navegador. No se sincronizan entre jugadores online.</p><label for="blackEditor">Consignas negras (una por línea)</label><textarea id="blackEditor" rows="7"></textarea><label for="whiteEditor">Respuestas blancas (una por línea)</label><textarea id="whiteEditor" rows="10"></textarea><div class="online-actions"><button class="btn secondary" id="resetDeck">Restaurar mazo base</button><button class="btn primary" id="saveDeck">Guardar mazo</button></div></div></div>
+<div id="deckModal" class="overlay hidden"><div class="modal deck-modal"><button class="close" id="closeDeck">×</button><p class="eyebrow">PERSONALIZACIÓN</p><h2>Editar mazo propio</h2><p id="deckModalHint" class="muted">Las cartas se guardan en este navegador.</p><label for="blackEditor">Consignas negras (una por línea)</label><textarea id="blackEditor" rows="7"></textarea><label for="whiteEditor">Respuestas blancas (una por línea)</label><textarea id="whiteEditor" rows="10"></textarea><div class="online-actions"><button class="btn secondary" id="resetDeck">Restaurar mazo base</button><button class="btn primary" id="saveDeck">Guardar mazo</button></div></div></div>
 <script src="app.js"></script>
 </body></html>
