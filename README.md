@@ -32,8 +32,7 @@ Para probar online desde otros dispositivos en la misma Wi-Fi, abrí `http://IP-
 1. Creá un repositorio en GitHub.
 2. Subí el contenido de `public/` a la raíz del repositorio (o configurá Pages para usar esa carpeta si tu flujo lo permite).
 3. En GitHub: **Settings → Pages**, elegí la rama y carpeta correspondientes.
-4. Abrí la URL publicada.
-5. En el menú del juego, pegá la URL `wss://...` del backend desplegado. GitHub Pages no ejecuta el backend: son dos servicios separados.
+4. Abrí la URL publicada. GitHub Pages publica solo el frontend; el backend online funciona por separado en Render.
 
 ## 3. Desplegar el backend en Render (ejemplo)
 1. Subí todo el proyecto a un repositorio.
@@ -42,6 +41,7 @@ Para probar online desde otros dispositivos en la misma Wi-Fi, abrí `http://IP-
 4. `Build Command`: `npm install --prefix server`
 5. `Start Command`: `npm start --prefix server`
 6. El servicio actual usa `https://hdp-servidor.onrender.com` y WebSocket `wss://hdp-servidor.onrender.com`.
+7. Opcional: configurá el Health Check Path como `/health`. Debe responder `200 OK` con `ok: true`.
 
 También podés desplegar el directorio `server/` en Railway o en tu propia infraestructura. El servidor escucha el puerto indicado por `PORT`.
 
