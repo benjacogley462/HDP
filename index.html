@@ -1,0 +1,1332 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>H.D.P. - Modo Técnica Digital</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- PeerJS for WebRTC Online Multiplayer -->
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <!-- QRCode.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        hdpRed: '#e50914',
+                        hdpDark: '#0f0f11',
+                        hdpCardBlack: '#18181b',
+                        hdpCardWhite: '#ffffff',
+                        hdpYellow: '#ffcc00',
+                        hdpBlue: '#2563eb'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        impact: ['Impact', 'Arial Black', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #09090b;
+            color: #f4f4f5;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        .card-shadow {
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.8), 0 8px 10px -6px rgba(0, 0, 0, 0.8);
+        }
+        .active-glow {
+            box-shadow: 0 0 25px rgba(229, 9, 20, 0.6);
+        }
+        .card-hover-effect {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .card-hover-effect:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 30px -10px rgba(239, 68, 68, 0.3);
+        }
+        .bar-ambient-bg {
+            background: radial-gradient(circle at 50% 20%, #1f0923 0%, #09090b 80%);
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #18181b;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #3f3f46;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between font-sans antialiased bar-ambient-bg">
+
+    <!-- ==========================================================================
+       BARRA SUPERIOR DE NAVEGACIÓN Y ESTADO
+       ========================================================================== -->
+    <header class="bg-zinc-900/90 backdrop-blur-md border-b border-zinc-800/80 py-3 px-4 sticky top-0 z-30 shadow-2xl">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="bg-hdpRed text-white font-impact text-2xl px-3 py-0.5 rounded tracking-tighter shadow-lg shadow-red-900/50 animate-pulse">
+                    H.D.P.
+                </div>
+                <div>
+                    <h1 class="text-xs font-black tracking-widest text-zinc-300 uppercase hidden sm:block">Hasta Dónde Podés</h1>
+                    <span class="text-[10px] bg-yellow-500/10 border border-yellow-500/40 text-hdpYellow px-2 py-0.5 rounded font-black tracking-wider shadow-sm">
+                        🍺 MODO TÉCNICA BAR
+                    </span>
+                </div>
+            </div>
+
+            <!-- Listado de Puntuación de Jugadores -->
+            <div id="scoreboardList" class="flex items-center gap-2 overflow-x-auto max-w-md py-1 px-2 bg-zinc-950/80 rounded-full border border-zinc-800/80">
+                <!-- Se puebla dinámicamente -->
+            </div>
+
+            <div class="flex items-center gap-2">
+                <button onclick="toggleMusic()" id="btnMusicToggle" title="Música Bar" class="p-2 bg-zinc-800 hover:bg-zinc-700 text-hdpYellow rounded-xl border border-zinc-700 transition flex items-center gap-1">
+                    <i id="musicIcon" class="fas fa-music"></i>
+                    <span class="text-[10px] font-bold hidden md:inline">Música</span>
+                </button>
+                <button onclick="toggleSound()" title="Efectos" class="p-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-xl border border-zinc-700 transition">
+                    <i id="soundIcon" class="fas fa-volume-up"></i>
+                </button>
+                <button onclick="openRulesModal()" title="Reglas de Juego" class="p-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-xl border border-zinc-700 transition text-xs font-bold flex items-center gap-1.5">
+                    <i class="fas fa-book"></i>
+                    <span class="hidden md:inline">Reglas</span>
+                </button>
+                <button onclick="openDeckEditorModal()" title="Editar Mazo" class="p-2 bg-zinc-800 hover:bg-zinc-700 text-hdpYellow rounded-xl border border-zinc-700 transition text-xs font-bold flex items-center gap-1.5">
+                    <i class="fas fa-layer-group"></i>
+                    <span class="hidden md:inline">Mazo</span>
+                </button>
+                <button onclick="confirmRestart()" title="Menú Principal" class="p-2 bg-hdpRed hover:bg-red-700 text-white rounded-xl transition text-xs font-bold flex items-center gap-1.5">
+                    <i class="fas fa-power-off"></i>
+                    <span class="hidden md:inline">Salir</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- ==========================================================================
+       TABLERO PRINCIPAL DE JUEGO
+       ========================================================================== -->
+    <main class="flex-grow max-w-7xl w-full mx-auto p-3 sm:p-5 flex flex-col justify-between space-y-4">
+
+        <!-- CABECERA DE LA RONDA E INSTRUCCIONES -->
+        <div class="flex flex-wrap justify-between items-center gap-2 text-xs font-bold bg-zinc-900 p-3 rounded-2xl border border-zinc-800 shadow-lg">
+            <div class="flex items-center gap-3">
+                <span id="roundNumber" class="text-hdpRed font-extrabold uppercase tracking-wider bg-black px-3 py-1 rounded-xl border border-zinc-800">Ronda 1 / 10</span>
+                <span class="text-hdpYellow bg-yellow-950/40 border border-yellow-800/60 px-2.5 py-1 rounded-xl flex items-center gap-1.5">
+                    <i class="fas fa-bullhorn"></i>
+                    <span>Cantora: <strong id="cantoraNameText" class="text-white">Jugador 1</strong></span>
+                </span>
+            </div>
+            <div id="statusBadge" class="bg-zinc-800 px-3 py-1 rounded-xl text-zinc-200 border border-zinc-700 font-bold text-center">
+                Esperando acción...
+            </div>
+        </div>
+
+        <!-- ÁREA DE MESA: CARTA NEGRA Y RESPUESTAS ENTREGADAS -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-center my-auto py-2">
+            
+            <!-- Carta Negra de la Ronda -->
+            <div class="flex flex-col items-center justify-center">
+                <div id="blackCard" class="w-64 h-80 sm:w-72 sm:h-96 bg-hdpCardBlack text-white p-6 rounded-2xl border-2 border-zinc-700 card-shadow flex flex-col justify-between relative transform transition">
+                    <div>
+                        <div class="flex justify-between items-center mb-4">
+                            <span class="text-xs font-black tracking-widest text-zinc-500 uppercase">H.D.P. CONSIGNA</span>
+                            <i class="fas fa-quote-right text-zinc-700 text-lg"></i>
+                        </div>
+                        <p id="blackCardText" class="text-base sm:text-lg font-extrabold leading-snug tracking-tight text-zinc-100">
+                            Cargando consigna...
+                        </p>
+                    </div>
+                    <div class="flex justify-between items-center pt-4 border-t border-zinc-800 text-xs font-bold text-zinc-500">
+                        <span>MODO TÉCNICA</span>
+                        <span class="bg-zinc-800 px-2 py-0.5 rounded text-zinc-300">TIRAR 1</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mesa de Respuestas (Tiradas / Votación) -->
+            <div class="lg:col-span-2 flex flex-col items-center justify-center space-y-3 bg-zinc-900/60 p-4 rounded-3xl border border-zinc-800/80 min-h-[320px]">
+                <div class="text-xs font-black text-zinc-400 uppercase tracking-wider flex items-center gap-2">
+                    <i class="fas fa-layer-group text-hdpRed"></i>
+                    <span>Mesa de Respuestas (<span id="submissionCountText">0</span>/<span id="totalPlayersText">0</span>)</span>
+                </div>
+
+                <!-- Contenedor dinámico de cartas en mesa -->
+                <div id="submissionContainer" class="flex flex-wrap justify-center items-center gap-3 w-full max-h-[360px] overflow-y-auto p-2">
+                    <!-- Cartas boca abajo o reveladas según fase -->
+                </div>
+
+                <p id="tableInstruction" class="text-xs text-zinc-400 font-semibold text-center italic">
+                    Las cartas tiradas se mantienen ocultas hasta que todos completen su jugada.
+                </p>
+            </div>
+        </div>
+
+        <!-- ÁREA INFERIOR: MANO DE CARTAS BLANCAS DEL JUGADOR O ACCIÓN PRINCIPAL -->
+        <div id="playerHandSection" class="bg-zinc-900 rounded-3xl border border-zinc-800 p-4 space-y-3 shadow-2xl transition-all">
+            <div class="flex justify-between items-center px-1">
+                <div class="flex items-center gap-2">
+                    <i class="fas fa-hand text-hdpYellow"></i>
+                    <span class="text-xs font-black tracking-wider text-white uppercase">Tu Mano</span>
+                    <span id="currentPlayerTurnName" class="text-xs bg-hdpRed text-white px-3 py-0.5 rounded-full font-bold shadow-md">
+                        Jugador 1
+                    </span>
+                    <span id="handCountBadge" class="text-[10px] bg-zinc-800 text-zinc-300 px-2 py-0.5 rounded font-bold">10 cartas</span>
+                </div>
+
+                <!-- Botón para tirar la carta seleccionada -->
+                <button id="mainActionButton" onclick="submitSelectedCard()" disabled class="px-6 py-2.5 bg-zinc-800 text-zinc-600 font-black uppercase text-xs rounded-xl shadow-lg cursor-not-allowed flex items-center gap-2 transition">
+                    <i class="fas fa-paper-plane"></i>
+                    <span>Tirar Carta Seleccionada</span>
+                </button>
+            </div>
+
+            <!-- Tira de cartas blancas del jugador activo -->
+            <div id="cardsHand" class="flex overflow-x-auto gap-3 py-2 px-1 scroll-smooth min-h-[200px] items-center">
+                <!-- Se puebla dinámicamente -->
+            </div>
+        </div>
+    </main>
+
+    <!-- ==========================================================================
+       MODAL MENÚ INICIAL Y CONFIGURACIÓN DE PARTIDA
+       ========================================================================== -->
+    <div id="setupScreen" class="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-zinc-900 border border-zinc-800 rounded-3xl max-w-xl w-full p-6 md:p-8 space-y-6 shadow-2xl my-8">
+            <div class="text-center space-y-2">
+                <h1 class="text-5xl font-black font-impact tracking-wider text-white">H.D.P. <span class="text-hdpRed">TÉCNICA</span></h1>
+                <p class="text-zinc-400 text-xs md:text-sm font-semibold">El modo de juego donde todos tiran, la Cantora lee y todos votan la mejor carta.</p>
+            </div>
+
+            <div class="space-y-5">
+                <!-- Tu Nombre -->
+                <div class="space-y-1.5">
+                    <label class="text-xs font-black text-zinc-300 uppercase tracking-wider block">Tu Nombre de Jugador</label>
+                    <input type="text" id="p1Name" value="Jugador 1" maxlength="14" class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-4 py-3 text-sm text-white font-bold focus:outline-none focus:border-hdpRed">
+                </div>
+
+                <!-- Modalidad de juego -->
+                <div class="space-y-1.5">
+                    <label class="text-xs font-black text-zinc-300 uppercase tracking-wider block">Modalidad de Partida</label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <button onclick="selectConnType('pass')" id="btnConnPass" class="p-4 border-2 border-hdpRed bg-hdpRed/20 text-white font-bold rounded-2xl flex flex-col items-center gap-2 transition">
+                            <i class="fas fa-mobile-screen text-2xl text-hdpRed"></i>
+                            <span class="text-xs font-black">Pasa y Juega (Mismo Dispositivo)</span>
+                        </button>
+                        <button onclick="selectConnType('online')" id="btnConnOnline" class="p-4 border border-zinc-700 bg-zinc-800 text-zinc-400 font-bold rounded-2xl flex flex-col items-center gap-2 transition">
+                            <i class="fas fa-wifi text-2xl"></i>
+                            <span class="text-xs font-black">Online (Salas por Enlace)</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Configuración Pasa y Juega (Jugadores Locales) -->
+                <div id="passConfigSection" class="bg-zinc-950 p-4 rounded-2xl border border-zinc-800 space-y-3">
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs font-bold text-zinc-300 block">Nombres de los Jugadores Locales:</span>
+                        <span class="text-[10px] bg-red-950/80 border border-red-800 text-red-400 font-extrabold px-2 py-0.5 rounded-full">
+                            Mínimo 3 Jugadores
+                        </span>
+                    </div>
+                    <div id="passPlayersInputs" class="space-y-2">
+                        <!-- Inputs generados por JS -->
+                    </div>
+                    <button onclick="addHumanPlayerInput()" class="text-xs text-hdpYellow font-bold flex items-center gap-1.5 hover:underline">
+                        <i class="fas fa-plus-circle"></i> Agregar otro jugador
+                    </button>
+                </div>
+
+                <!-- Configuración Online Salas -->
+                <div id="onlineConfigSection" class="hidden bg-zinc-950 p-4 rounded-2xl border border-zinc-800 space-y-4">
+                    <div id="websocketBlockedNotice" class="hidden p-3 bg-yellow-950/80 border border-yellow-700/80 rounded-xl text-yellow-200 text-xs font-semibold leading-relaxed">
+                        <i class="fas fa-triangle-exclamation mr-1 text-hdpYellow"></i>
+                        <span>Las conexiones externas (WebSockets) están restringidas en esta vista previa. Para jugar en línea, abrí este archivo directamente en una pestaña normal de tu navegador. Mientras tanto, disfrutá del modo <strong>Pasa y Juega</strong>.</span>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <button onclick="setupOnlineHost()" class="p-3 bg-hdpBlue hover:bg-blue-600 text-white font-bold rounded-xl text-xs uppercase">
+                            <i class="fas fa-crown mr-1"></i> Crear Sala (Host)
+                        </button>
+                        <button onclick="showJoinRoomInput()" class="p-3 bg-zinc-800 hover:bg-zinc-700 text-white font-bold rounded-xl text-xs uppercase">
+                            <i class="fas fa-sign-in-alt mr-1"></i> Unirse a Sala
+                        </button>
+                    </div>
+
+                    <!-- Vista Host -->
+                    <div id="hostRoomUI" class="hidden text-center space-y-3 pt-2">
+                        <p class="text-xs text-zinc-400 font-bold">Enlace de invitación a la sala:</p>
+                        <div class="flex gap-2">
+                            <input type="text" id="roomLinkInput" readonly class="w-full bg-black border border-zinc-800 text-xs text-hdpYellow px-3 py-2 rounded-xl font-mono">
+                            <button onclick="copyRoomLink()" class="px-3 bg-zinc-800 hover:bg-zinc-700 text-white rounded-xl text-xs font-bold">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                        <div class="flex justify-center py-2">
+                            <div id="qrcode" class="p-2 bg-white rounded-xl shadow-lg"></div>
+                        </div>
+                        <p class="text-[11px] text-zinc-500">Jugadores conectados: <span id="onlinePlayerCount" class="text-white font-bold">1</span></p>
+                        <div id="onlinePlayerList" class="flex flex-wrap justify-center gap-1.5 text-xs"></div>
+                    </div>
+
+                    <!-- Vista Unirse -->
+                    <div id="joinRoomUI" class="hidden space-y-3 pt-2">
+                        <input type="text" id="joinRoomInput" placeholder="Ingresá Código de Sala (Ej: HDP8392)" class="w-full bg-black border border-zinc-700 rounded-xl px-4 py-2.5 text-xs text-white uppercase font-bold focus:outline-none focus:border-hdpBlue">
+                        <button onclick="connectToOnlineRoom()" class="w-full py-2.5 bg-hdpBlue hover:bg-blue-600 text-white font-bold rounded-xl text-xs uppercase">
+                            Conectar a la Sala
+                        </button>
+                        <p id="joinStatusText" class="text-xs text-center text-zinc-400 font-semibold"></p>
+                    </div>
+                </div>
+
+                <!-- Botón Comenzar -->
+                <button id="btnStartGame" onclick="startGame()" class="w-full py-4 bg-hdpRed hover:bg-red-700 text-white font-black text-sm uppercase rounded-2xl shadow-xl transition transform active:scale-98 tracking-wider">
+                    ¡EMPEZAR PARTIDA (10 CARTAS C/U)!
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==========================================================================
+       MODAL TRANSICIÓN Y BLOQUEO PRIVACIDAD EN PASA Y JUEGA
+       ========================================================================== -->
+    <div id="passTurnModal" class="fixed inset-0 z-50 bg-black/98 flex items-center justify-center p-4 hidden">
+        <div class="bg-zinc-900 border border-zinc-800 rounded-3xl max-w-md w-full p-8 text-center space-y-5 shadow-2xl">
+            <i class="fas fa-user-secret text-6xl text-hdpYellow animate-pulse"></i>
+            <h3 class="text-2xl font-black text-white uppercase tracking-wider">Turno Privado</h3>
+            <p class="text-xs text-zinc-300 leading-relaxed">
+                Pasale la pantalla a <strong id="nextPlayerTurnName" class="text-hdpYellow text-sm font-black underline">Jugador 2</strong>.<br>
+                Nadie más debe mirar para mantener la privacidad de tus cartas y tu voto.
+            </p>
+            <button onclick="confirmTurnTransition()" class="w-full py-3.5 bg-hdpYellow hover:bg-yellow-500 text-black font-black rounded-xl text-xs uppercase shadow-lg transition">
+                Ya tengo la pantalla
+            </button>
+        </div>
+    </div>
+
+    <!-- ==========================================================================
+       MODAL LECTURA DE LA CANTORA (REVELACIÓN PASO A PASO)
+       ========================================================================== -->
+    <div id="cantoraReadingModal" class="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4 hidden">
+        <div class="bg-zinc-900 border border-zinc-800 rounded-3xl max-w-lg w-full p-6 text-center space-y-6 shadow-2xl">
+            <div class="space-y-1">
+                <span class="text-xs font-black text-hdpYellow uppercase tracking-widest"><i class="fas fa-bullhorn mr-1"></i> La Cantora leyendo...</span>
+                <h3 id="cantoraReadingTitle" class="text-lg font-extrabold text-white">Consigna...</h3>
+            </div>
+            
+            <div class="bg-black p-6 rounded-2xl border border-zinc-800 min-h-[160px] flex items-center justify-center">
+                <p id="cantoraCardDisplay" class="text-base sm:text-lg font-bold text-zinc-100 italic">
+                    Carta en lectura...
+                </p>
+            </div>
+
+            <p class="text-xs text-zinc-400">Carta <span id="currentReadingIndex">1</span> de <span id="totalReadingCount">3</span></p>
+
+            <button onclick="nextReadingCard()" id="btnNextRead" class="w-full py-3.5 bg-hdpRed hover:bg-red-700 text-white font-black rounded-xl text-xs uppercase shadow-lg transition">
+                Siguiente Carta / Leer Todas
+            </button>
+        </div>
+    </div>
+
+    <!-- ==========================================================================
+       MODAL GANADOR FINAL
+       ========================================================================== -->
+    <div id="winnerModal" class="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4 hidden">
+        <div class="bg-zinc-900 border border-zinc-800 rounded-3xl max-w-md w-full p-8 text-center space-y-6 shadow-2xl">
+            <i class="fas fa-trophy text-6xl text-hdpYellow animate-bounce"></i>
+            <div class="space-y-1">
+                <h2 class="text-3xl font-black font-impact text-white uppercase tracking-wide">¡FIN DE LA PARTIDA!</h2>
+                <p id="winnerText" class="text-lg font-extrabold text-hdpRed">Jugador 1 ha ganado</p>
+            </div>
+            <div id="finalScoreboard" class="bg-black/60 p-4 rounded-2xl border border-zinc-800 text-xs space-y-2 text-left"></div>
+            <div class="grid grid-cols-2 gap-3">
+                <button onclick="restartSameGame()" class="w-full py-3 bg-hdpYellow hover:bg-yellow-500 text-black font-black rounded-xl text-xs uppercase shadow-lg">
+                    Volver a Jugar
+                </button>
+                <button onclick="location.reload()" class="w-full py-3 bg-zinc-800 hover:bg-zinc-700 text-white font-black rounded-xl text-xs uppercase shadow-lg">
+                    Menú Principal
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==========================================================================
+       MODAL DE REGLAS
+       ========================================================================== -->
+    <div id="rulesModal" class="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4 hidden">
+        <div class="bg-zinc-900 border border-zinc-800 rounded-3xl max-w-lg w-full p-6 space-y-4 max-h-[85vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b border-zinc-800 pb-3">
+                <h3 class="text-xl font-black text-white font-impact tracking-wider">REGLAS - MODO TÉCNICA</h3>
+                <button onclick="closeRulesModal()" class="text-zinc-400 hover:text-white text-2xl font-bold">&times;</button>
+            </div>
+            <div class="space-y-3 text-xs text-zinc-300 leading-relaxed">
+                <p>• <strong>10 Cartas Blancas:</strong> Cada jugador recibe 10 cartas al comenzar y <strong>no se vuelven a reponer</strong>. Las cartas jugadas se descartan permanentemente.</p>
+                <p>• <strong>La Cantora:</strong> En cada ronda rota el rol de la Cantora, quien saca y lee la carta negra de consigna.</p>
+                <p>• <strong>Tirada Secreta:</strong> Todos los jugadores tiran 1 carta blanca en secreto sin que los demás la vean.</p>
+                <p>• <strong>Lectura de la Cantora:</strong> Las cartas se mezclan en la mesa y La Cantora las lee y revela una por una.</p>
+                <p>• <strong>Votación y Punto:</strong> Todos votan la carta que consideran mejor (prohibido votarse a sí mismo). El que tiene más votos se lleva el punto de la carta negra.</p>
+                <p>• <strong>Fin del Juego:</strong> Se juegan rondas sucesivas hasta que los jugadores se queden sin cartas en la mano. ¡Gana el que sume más puntos!</p>
+            </div>
+            <button onclick="closeRulesModal()" class="w-full py-3 bg-zinc-800 hover:bg-zinc-700 text-white font-bold rounded-xl text-xs uppercase">
+                Entendido
+            </button>
+        </div>
+    </div>
+
+    <!-- ==========================================================================
+       MODAL DE EDITOR DE MAZO
+       ========================================================================== -->
+    <div id="deckEditorModal" class="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4 hidden">
+        <div class="bg-zinc-900 border border-zinc-800 rounded-3xl max-w-2xl w-full p-6 space-y-5 max-h-[85vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b border-zinc-800 pb-3">
+                <h3 class="text-2xl font-black text-white font-impact tracking-wider text-hdpYellow"><i class="fas fa-edit mr-2"></i>EDITOR DE MAZO</h3>
+                <button onclick="closeDeckEditorModal()" class="text-zinc-400 hover:text-white text-2xl font-bold">&times;</button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-zinc-950 p-4 rounded-2xl border border-zinc-800 space-y-3">
+                    <h4 class="font-bold text-white text-xs uppercase flex items-center gap-2">
+                        <i class="fas fa-plus-circle text-green-500"></i> Sumar Carta Blanca
+                    </h4>
+                    <input type="text" id="newWhiteCardInput" placeholder="Ej: Las manos de Perón" class="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-hdpYellow">
+                    <button onclick="addCustomWhiteCard()" class="w-full py-2 bg-hdpYellow hover:bg-yellow-500 text-black font-black text-xs uppercase rounded-xl">
+                        Agregar al Mazo
+                    </button>
+                </div>
+
+                <div class="bg-zinc-950 p-4 rounded-2xl border border-zinc-800 space-y-3">
+                    <h4 class="font-bold text-white text-xs uppercase flex items-center gap-2">
+                        <i class="fas fa-plus-circle text-hdpRed"></i> Sumar Carta Negra
+                    </h4>
+                    <input type="text" id="newBlackCardInput" placeholder="Ej: Para mi cumpleaños pedí _____." class="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-hdpRed">
+                    <button onclick="addCustomBlackCard()" class="w-full py-2 bg-hdpRed hover:bg-red-700 text-white font-black text-xs uppercase rounded-xl">
+                        Agregar al Mazo
+                    </button>
+                </div>
+            </div>
+
+            <div class="space-y-2 pt-2">
+                <div class="flex justify-between items-center text-xs text-zinc-400 font-bold">
+                    <span>Cartas Blancas Activas (<span id="whiteCardsCountText">0</span>)</span>
+                </div>
+                <div id="deckWhiteCardsList" class="max-h-40 overflow-y-auto bg-black p-2 rounded-2xl border border-zinc-800 text-xs space-y-1"></div>
+            </div>
+
+            <button onclick="closeDeckEditorModal()" class="w-full py-3 bg-zinc-800 hover:bg-zinc-700 text-white font-bold rounded-xl text-xs uppercase">
+                Guardar y Cerrar
+            </button>
+        </div>
+    </div>
+
+    <!-- ==========================================================================
+       CÓDIGO JAVASCRIPT ROBUSTO Y COMPLETO
+       ========================================================================== -->
+    <script>
+        /* --------------------------------------------------------------------------
+           1. MAZOS OFICIALES Y LITERALES DEL JUEGO H.D.P. (ARGENTINA)
+           -------------------------------------------------------------------------- */
+        const BLACK_CARDS = [
+            { text: "Las manos amputadas de Perón se usaron para _____.", pick: 1 },
+            { text: "Para mi cumpleaños pedí un deseo y me trajeron _____.", pick: 1 },
+            { text: "¿Qué escondía el abuelo bajo el colchón cuando falleció?", pick: 1 },
+            { text: "En el grupo de WhatsApp de la familia mandaron por error _____.", pick: 1 },
+            { text: "El secreto para mantener viva la llama de la pasión es _____.", pick: 1 },
+            { text: "Llegó la policía a la fiesta y me agarró justo con _____.", pick: 1 },
+            { text: "En Santiago del Estero no hay nada más tradicional que _____.", pick: 1 },
+            { text: "¿Qué fue lo que arruinó por completo la cena de Nochebuena?", pick: 1 },
+            { text: "En el colectivo a las 7 de la mañana se siente un fuerte olor a _____.", pick: 1 },
+            { text: "La verdadera razón por la que me echaron del trabajo fue _____.", pick: 1 },
+            { text: "No hay nada más representativo de la cultura argentina que _____.", pick: 1 },
+            { text: "El nuevo plan social va destinado a financiar _____.", pick: 1 },
+            { text: "¿Qué le regalé a mi suegra para que sufra un infarto?", pick: 1 },
+            { text: "Aceptaría ir preso 5 años si a cambio me garantizan _____.", pick: 1 },
+            { text: "Lo primero que decretaría si fuera Presidente por un día es _____.", pick: 1 },
+            { text: "Mi psicólogo se quedó mudo y me dio el alta cuando le hablé de _____.", pick: 1 },
+            { text: "Un asado con amigos se echa a perder automáticamente si aparece _____.", pick: 1 },
+            { text: "¿Por qué estoy encerrado llorando en el baño del boliche?", pick: 1 },
+            { text: "Para curar la resaca mortal lo único efectivo es _____.", pick: 1 },
+            { text: "Llegué de sorpresa a casa de mis papás y los encontré haciendo _____.", pick: 1 }
+        ];
+
+        const WHITE_CARDS = [
+            "Las manos de Perón",
+            "Dos niñas de 7 años",
+            "Coger con una línea de falopa en la punta de la verga",
+            "Esperar a que cumpla los 18",
+            "Un enano tirando bombas de humo en un boliche",
+            "La siesta santiagueña con un familiar",
+            "Mandar audios de 5 minutos a las 3 de la mañana en pedo",
+            "Una Manaos de uva caliente al sol",
+            "El fantasma de la B comiéndose una milanesa",
+            "Un volquete lleno de cadáveres y fetos",
+            "Un político prometiendo asfaltar la misma calle por quinta vez",
+            "Discutir de geopolítica internacional con un remisero falopeado",
+            "Un fernecito preparado en una botella de plástico cortada con los dientes",
+            "Gente de 80 años teniendo sexo desenfrenado",
+            "Un jubilado linchando a un chorro en la noche",
+            "Comer empanadas de aire en una marcha piquetera",
+            "Un tío borracho desnudándose en la cena de Navidad",
+            "El espíritu de Ricardo Fort bajando en helicóptero",
+            "Llegar tres horas tarde al velorio y pedir empanadas",
+            "Un pastor evangélico cobrando el diezmo con Mercado Pago",
+            "Gritar '¡Goooool!' durante un minuto de silencio",
+            "Hacerse el lisiado para conseguir asiento en el colectivo",
+            "Ponerle hielo al vino en cartón mientras discutís la herencia",
+            "Mentir impunemente diciendo que sos médico en Tinder",
+            "Un fisura pidiendo la hora con una navaja en la mano",
+            "Pedir descuento en el servicio funerario de tu abuela",
+            "Robarse los saquitos de edulcorante del bar de la esquina",
+            "Bailar cumbia villera en el baño de un velatorio",
+            "Irse a vivir al Uritorco a tomar té de hongos con OSDE",
+            "Un señor desnudo en la calle corriendo sin rumbo"
+        ];
+
+        /* --------------------------------------------------------------------------
+           2. ESTADO GLOBAL DE LA PARTIDA (MODO TÉCNICA)
+           -------------------------------------------------------------------------- */
+        let gameState = {
+            connType: 'pass',
+            players: [],
+            cantoraIndex: 0,
+            currentRound: 1,
+            blackDeck: [],
+            whiteDeck: [],
+            currentBlackCard: null,
+            submissions: [],
+            votes: {},
+            phase: 'SETUP',
+            submittingPlayerIndex: 0,
+            votingPlayerIndex: 0,
+            readingIndex: 0,
+            selectedCardHandIndex: null,
+            soundEnabled: true,
+            musicPlaying: false,
+            roomId: null
+        };
+
+        let passPlayerNames = ["Jugador 2", "Jugador 3"];
+        let peer = null;
+        let conn = null;
+        let onlinePeers = [];
+        let musicInterval = null;
+
+        /* --------------------------------------------------------------------------
+           3. CONFIGURACIÓN DE JUGADORES LOCALES Y VALIDACIÓN DE MÍNIMO 3 JUGADORES
+           -------------------------------------------------------------------------- */
+        function renderPassPlayerInputs() {
+            const container = document.getElementById('passPlayersInputs');
+            if (!container) return;
+            container.innerHTML = '';
+
+            passPlayerNames.forEach((name, index) => {
+                const div = document.createElement('div');
+                div.className = 'flex items-center gap-2';
+                div.innerHTML = `
+                    <input type="text" value="${name}" onchange="updatePassPlayerName(${index}, this.value)" 
+                        placeholder="Jugador ${index + 2}" 
+                        class="flex-grow bg-zinc-900 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-white font-bold focus:outline-none focus:border-hdpRed">
+                    ${passPlayerNames.length > 2 ? `
+                        <button onclick="removeHumanPlayerInput(${index})" class="p-2 text-red-500 hover:text-red-400 text-xs">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    ` : ''}
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function addHumanPlayerInput() {
+            if (passPlayerNames.length < 5) {
+                passPlayerNames.push(`Jugador ${passPlayerNames.length + 2}`);
+                renderPassPlayerInputs();
+            }
+        }
+
+        function removeHumanPlayerInput(index) {
+            // No permitir menos de 2 en passPlayerNames (lo cual junto con P1 suma mínimo 3 jugadores)
+            if (passPlayerNames.length > 2) {
+                passPlayerNames.splice(index, 1);
+                renderPassPlayerInputs();
+            }
+        }
+
+        function updatePassPlayerName(index, value) {
+            passPlayerNames[index] = value.trim() || `Jugador ${index + 2}`;
+        }
+
+        /* --------------------------------------------------------------------------
+           4. INICIO DE PARTIDA Y REPARTO DE 10 CARTAS ÚNICAS
+           -------------------------------------------------------------------------- */
+        function startGame() {
+            const p1Name = document.getElementById('p1Name').value.trim() || "Jugador 1";
+
+            if (gameState.connType === 'pass') {
+                gameState.players = [{ id: 0, name: p1Name, score: 0, hand: [] }];
+                passPlayerNames.forEach((name, i) => {
+                    gameState.players.push({
+                        id: i + 1,
+                        name: name.trim() || `Jugador ${i + 2}`,
+                        score: 0,
+                        hand: []
+                    });
+                });
+            } else {
+                // Modo Online
+                gameState.players = [{ id: 0, name: p1Name, score: 0, hand: [] }];
+                onlinePeers.forEach((pName, i) => {
+                    gameState.players.push({
+                        id: i + 1,
+                        name: pName,
+                        score: 0,
+                        hand: []
+                    });
+                });
+            }
+
+            // REGLA CRÍTICA: NO PERMITIR JUGAR DE A 2
+            if (gameState.players.length < 3) {
+                alert("⚠️ ¡Atención! El Modo Técnica de H.D.P. requiere como mínimo 3 jugadores para mantener la votación anónima y competitiva.");
+                return;
+            }
+
+            // Iniciar música chill bar
+            if (!gameState.musicPlaying) {
+                toggleMusic();
+            }
+
+            gameState.blackDeck = shuffle(BLACK_CARDS);
+            gameState.whiteDeck = shuffle(WHITE_CARDS);
+            gameState.cantoraIndex = 0;
+            gameState.currentRound = 1;
+
+            // Repartir exactamente 10 cartas blancas a cada jugador
+            gameState.players.forEach(player => {
+                player.hand = [];
+                for (let i = 0; i < 10; i++) {
+                    if (gameState.whiteDeck.length > 0) {
+                        player.hand.push(gameState.whiteDeck.pop());
+                    }
+                }
+            });
+
+            document.getElementById('setupScreen').classList.add('hidden');
+            startRound();
+        }
+
+        /* --------------------------------------------------------------------------
+           5. SINTETIZADOR DE MÚSICA BAR / LOUNGE AMBIENT
+           -------------------------------------------------------------------------- */
+        function toggleMusic() {
+            gameState.musicPlaying = !gameState.musicPlaying;
+            const btn = document.getElementById('btnMusicToggle');
+            const icon = document.getElementById('musicIcon');
+
+            if (gameState.musicPlaying) {
+                if (btn) btn.classList.add('bg-hdpYellow', 'text-black');
+                startBarMusicLoop();
+            } else {
+                if (btn) btn.classList.remove('bg-hdpYellow', 'text-black');
+                stopBarMusicLoop();
+            }
+        }
+
+        function startBarMusicLoop() {
+            stopBarMusicLoop();
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                // Acordes relajados tipo bar / jazz / synthwave
+                const notes = [130.81, 164.81, 196.00, 220.00, 146.83, 174.61, 220.00, 261.63];
+                let step = 0;
+
+                musicInterval = setInterval(() => {
+                    if (!gameState.musicPlaying) return;
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(notes[step % notes.length], audioCtx.currentTime);
+
+                    gain.gain.setValueAtTime(0.015, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.6);
+
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.6);
+
+                    step++;
+                }, 400);
+            } catch (e) {}
+        }
+
+        function stopBarMusicLoop() {
+            if (musicInterval) {
+                clearInterval(musicInterval);
+                musicInterval = null;
+            }
+        }
+
+        function removeHumanPlayerInput(index) {
+            if (passPlayerNames.length > 1) {
+                passPlayerNames.splice(index, 1);
+                renderPassPlayerInputs();
+            }
+        }
+
+        function updatePassPlayerName(index, value) {
+            passPlayerNames[index] = value.trim() || `Jugador ${index + 2}`;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderPassPlayerInputs();
+            // Verificar si hay sala en la URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const roomParam = urlParams.get('room');
+            if (roomParam) {
+                selectConnType('online');
+                document.getElementById('joinRoomInput').value = roomParam;
+                showJoinRoomInput();
+            }
+        });
+
+        function selectConnType(type) {
+            gameState.connType = type;
+            const btnPass = document.getElementById('btnConnPass');
+            const btnOnline = document.getElementById('btnConnOnline');
+            const passSec = document.getElementById('passConfigSection');
+            const onlineSec = document.getElementById('onlineConfigSection');
+
+            if (type === 'pass') {
+                btnPass.className = 'p-4 border-2 border-hdpRed bg-hdpRed/20 text-white font-bold rounded-2xl flex flex-col items-center gap-2 transition';
+                btnOnline.className = 'p-4 border border-zinc-700 bg-zinc-800 text-zinc-400 font-bold rounded-2xl flex flex-col items-center gap-2 transition';
+                passSec.classList.remove('hidden');
+                onlineSec.classList.add('hidden');
+            } else {
+                btnOnline.className = 'p-4 border-2 border-hdpBlue bg-hdpBlue/20 text-white font-bold rounded-2xl flex flex-col items-center gap-2 transition';
+                passSec.classList.add('hidden');
+                onlineSec.classList.remove('hidden');
+            }
+        }
+
+        /* --------------------------------------------------------------------------
+           4. INICIO DE PARTIDA Y REPARTO DE 10 CARTAS ÚNICAS
+           -------------------------------------------------------------------------- */
+        function startGame() {
+            const p1Name = document.getElementById('p1Name').value.trim() || "Jugador 1";
+
+            if (gameState.connType === 'pass') {
+                gameState.players = [{ id: 0, name: p1Name, score: 0, hand: [] }];
+                passPlayerNames.forEach((name, i) => {
+                    gameState.players.push({
+                        id: i + 1,
+                        name: name.trim() || `Jugador ${i + 2}`,
+                        score: 0,
+                        hand: []
+                    });
+                });
+            } else {
+                // Modo Online
+                gameState.players = [{ id: 0, name: p1Name, score: 0, hand: [] }];
+                onlinePeers.forEach((pName, i) => {
+                    gameState.players.push({
+                        id: i + 1,
+                        name: pName,
+                        score: 0,
+                        hand: []
+                    });
+                });
+            }
+
+            gameState.blackDeck = shuffle(BLACK_CARDS);
+            gameState.whiteDeck = shuffle(WHITE_CARDS);
+            gameState.cantoraIndex = 0;
+            gameState.currentRound = 1;
+
+            // Repartir exactamente 10 cartas blancas a cada jugador (¡SIN RECARGAR DESPUÉS!)
+            gameState.players.forEach(player => {
+                player.hand = [];
+                for (let i = 0; i < 10; i++) {
+                    if (gameState.whiteDeck.length > 0) {
+                        player.hand.push(gameState.whiteDeck.pop());
+                    }
+                }
+            });
+
+            document.getElementById('setupScreen').classList.add('hidden');
+            startRound();
+        }
+
+        function startRound() {
+            if (gameState.blackDeck.length === 0) {
+                gameState.blackDeck = shuffle(BLACK_CARDS);
+            }
+
+            gameState.currentBlackCard = gameState.blackDeck.pop();
+            gameState.submissions = [];
+            gameState.votes = {};
+            gameState.phase = 'SUBMITTING';
+            gameState.submittingPlayerIndex = 0;
+            gameState.votingPlayerIndex = 0;
+            gameState.selectedCardHandIndex = null;
+
+            if (gameState.connType === 'pass') {
+                showPassTurnModal(gameState.players[0].name);
+            }
+
+            renderUI();
+        }
+
+        /* --------------------------------------------------------------------------
+           5. UTILIDADES (SONIDO, SHUFFLE, MODALES)
+           -------------------------------------------------------------------------- */
+        function shuffle(array) {
+            let arr = [...array];
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        function playBeep(freq = 440, duration = 0.1) {
+            if (!gameState.soundEnabled) return;
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.value = freq;
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + duration);
+            } catch (e) {}
+        }
+
+        function toggleSound() {
+            gameState.soundEnabled = !gameState.soundEnabled;
+            const icon = document.getElementById('soundIcon');
+            if (icon) {
+                icon.className = gameState.soundEnabled ? 'fas fa-volume-up' : 'fas fa-volume-mute';
+            }
+        }
+
+        function openRulesModal() { document.getElementById('rulesModal').classList.remove('hidden'); }
+        function closeRulesModal() { document.getElementById('rulesModal').classList.add('hidden'); }
+        function openDeckEditorModal() { 
+            renderDeckEditorList();
+            document.getElementById('deckEditorModal').classList.remove('hidden'); 
+        }
+        function closeDeckEditorModal() { document.getElementById('deckEditorModal').classList.add('hidden'); }
+
+        function confirmRestart() {
+            if (confirm("¿Seguro que querés salir y volver al menú principal?")) {
+                location.reload();
+            }
+        }
+
+        function restartSameGame() {
+            document.getElementById('winnerModal').classList.add('hidden');
+            startGame();
+        }
+
+        function addCustomWhiteCard() {
+            const input = document.getElementById('newWhiteCardInput');
+            const val = input.value.trim();
+            if (val) {
+                WHITE_CARDS.push(val);
+                gameState.whiteDeck.push(val);
+                input.value = '';
+                renderDeckEditorList();
+                playBeep(600, 0.1);
+            }
+        }
+
+        function addCustomBlackCard() {
+            const input = document.getElementById('newBlackCardInput');
+            const val = input.value.trim();
+            if (val) {
+                BLACK_CARDS.push({ text: val, pick: 1 });
+                gameState.blackDeck.push({ text: val, pick: 1 });
+                input.value = '';
+                renderDeckEditorList();
+                playBeep(600, 0.1);
+            }
+        }
+
+        function renderDeckEditorList() {
+            const list = document.getElementById('deckWhiteCardsList');
+            const count = document.getElementById('whiteCardsCountText');
+            if (count) count.innerText = WHITE_CARDS.length;
+            if (list) {
+                list.innerHTML = WHITE_CARDS.map((c, i) => `
+                    <div class="flex justify-between items-center bg-zinc-900 px-3 py-1.5 rounded border border-zinc-800 text-zinc-300">
+                        <span class="truncate">${c}</span>
+                        <button onclick="removeWhiteCard(${i})" class="text-red-500 hover:text-red-400 font-bold ml-2">&times;</button>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function removeWhiteCard(index) {
+            WHITE_CARDS.splice(index, 1);
+            renderDeckEditorList();
+        }
+
+        /* --------------------------------------------------------------------------
+           6. FLUJO DEL JUEGO: TIRAR, LEER (CANTORA), VOTAR Y PUNTAJES
+           -------------------------------------------------------------------------- */
+        function selectCardFromHand(index) {
+            gameState.selectedCardHandIndex = index;
+            playBeep(350, 0.05);
+            renderUI();
+        }
+
+        function submitSelectedCard() {
+            if (gameState.selectedCardHandIndex === null) return;
+            const currentPlayer = gameState.players[gameState.submittingPlayerIndex];
+            
+            // Retirar carta de la mano (¡Se descarta permanentemente y no se repone!)
+            const playedCard = currentPlayer.hand.splice(gameState.selectedCardHandIndex, 1)[0];
+
+            gameState.submissions.push({
+                playerId: currentPlayer.id,
+                cardText: playedCard
+            });
+
+            gameState.selectedCardHandIndex = null;
+            playBeep(520, 0.1);
+
+            gameState.submittingPlayerIndex++;
+
+            if (gameState.submittingPlayerIndex >= gameState.players.length) {
+                // Todos tiraron. Mezclar submissions para anonimato
+                gameState.submissions = shuffle(gameState.submissions);
+                
+                // Iniciar fase de lectura por La Cantora
+                gameState.phase = 'READING';
+                gameState.readingIndex = 0;
+                showCantoraReadingModal();
+            } else {
+                if (gameState.connType === 'pass') {
+                    showPassTurnModal(gameState.players[gameState.submittingPlayerIndex].name);
+                }
+            }
+
+            renderUI();
+        }
+
+        function showPassTurnModal(nextPlayerName) {
+            const modal = document.getElementById('passTurnModal');
+            const nameElem = document.getElementById('nextPlayerTurnName');
+            if (nameElem) nameElem.innerText = nextPlayerName;
+            if (modal) modal.classList.remove('hidden');
+        }
+
+        function confirmTurnTransition() {
+            document.getElementById('passTurnModal').classList.add('hidden');
+            renderUI();
+        }
+
+        /* FASE DE LECTURA DE LA CANTORA */
+        function showCantoraReadingModal() {
+            const modal = document.getElementById('cantoraReadingModal');
+            const cantora = gameState.players[gameState.cantoraIndex];
+            document.getElementById('cantoraReadingTitle').innerText = `La Cantora (${cantora.name}) lee las respuestas: "${gameState.currentBlackCard.text}"`;
+            document.getElementById('totalReadingCount').innerText = gameState.submissions.length;
+            updateReadingCardDisplay();
+            if (modal) modal.classList.remove('hidden');
+        }
+
+        function updateReadingCardDisplay() {
+            document.getElementById('currentReadingIndex').innerText = gameState.readingIndex + 1;
+            document.getElementById('cantoraCardDisplay').innerText = `"${gameState.submissions[gameState.readingIndex].cardText}"`;
+        }
+
+        function nextReadingCard() {
+            gameState.readingIndex++;
+            if (gameState.readingIndex < gameState.submissions.length) {
+                updateReadingCardDisplay();
+                playBeep(480, 0.08);
+            } else {
+                // Termino de leer todas las cartas. Pasar a votación.
+                document.getElementById('cantoraReadingModal').classList.add('hidden');
+                gameState.phase = 'VOTING';
+                gameState.votingPlayerIndex = 0;
+                if (gameState.connType === 'pass') {
+                    showPassTurnModal(gameState.players[0].name);
+                }
+                renderUI();
+            }
+        }
+
+        /* FASE DE VOTACIÓN */
+        function voteForCard(submissionIndex) {
+            const currentVoter = gameState.players[gameState.votingPlayerIndex];
+            const targetSub = gameState.submissions[submissionIndex];
+
+            // Prohibido votarse a sí mismo
+            if (targetSub.playerId === currentVoter.id) {
+                alert("No podés votar por tu propia carta.");
+                return;
+            }
+
+            gameState.votes[currentVoter.id] = submissionIndex;
+            playBeep(650, 0.12);
+
+            gameState.votingPlayerIndex++;
+
+            if (gameState.votingPlayerIndex >= gameState.players.length) {
+                resolveRoundResults();
+            } else {
+                if (gameState.connType === 'pass') {
+                    showPassTurnModal(gameState.players[gameState.votingPlayerIndex].name);
+                }
+            }
+
+            renderUI();
+        }
+
+        function resolveRoundResults() {
+            gameState.phase = 'ROUND_RESULTS';
+
+            const voteCounts = new Array(gameState.submissions.length).fill(0);
+            Object.values(gameState.votes).forEach(subIdx => {
+                if (voteCounts[subIdx] !== undefined) voteCounts[subIdx]++;
+            });
+
+            let maxVotes = -1;
+            let winningSubIdx = 0;
+            voteCounts.forEach((count, idx) => {
+                if (count > maxVotes) {
+                    maxVotes = count;
+                    winningSubIdx = idx;
+                }
+            });
+
+            const winnerSubmission = gameState.submissions[winningSubIdx];
+            const winningPlayer = gameState.players.find(p => p.id === winnerSubmission.playerId);
+
+            if (winningPlayer) {
+                winningPlayer.score += 1;
+            }
+
+            renderUI();
+
+            // Verificar si los jugadores se quedaron sin cartas en mano (Fin del juego tras 10 rondas o agotamiento de mano)
+            setTimeout(() => {
+                const hasCardsLeft = gameState.players.some(p => p.hand.length > 0);
+                if (!hasCardsLeft) {
+                    showWinnerModal();
+                } else {
+                    gameState.currentRound++;
+                    gameState.cantoraIndex = (gameState.cantoraIndex + 1) % gameState.players.length;
+                    startRound();
+                }
+            }, 3500);
+        }
+
+        function showWinnerModal() {
+            gameState.phase = 'GAME_OVER';
+            const modal = document.getElementById('winnerModal');
+            const winnerText = document.getElementById('winnerText');
+            const finalBoard = document.getElementById('finalScoreboard');
+
+            // Encontrar al ganador con mayor puntaje
+            let bestScore = -1;
+            let winners = [];
+            gameState.players.forEach(p => {
+                if (p.score > bestScore) {
+                    bestScore = p.score;
+                    winners = [p];
+                } else if (p.score === bestScore) {
+                    winners.push(p);
+                }
+            });
+
+            if (winners.length === 1) {
+                winnerText.innerText = `¡${winners[0].name} es el ganador con ${winners[0].score} Puntos!`;
+            } else {
+                winnerText.innerText = `¡Empate entre ${winners.map(w => w.name).join(', ')} con ${bestScore} Puntos!`;
+            }
+
+            if (finalBoard) {
+                finalBoard.innerHTML = gameState.players
+                    .sort((a, b) => b.score - a.score)
+                    .map(p => `<div class="flex justify-between font-bold py-1 border-b border-zinc-800">
+                        <span class="text-white">${p.name}</span>
+                        <span class="text-hdpYellow">${p.score} Pts</span>
+                    </div>`).join('');
+            }
+            if (modal) modal.classList.remove('hidden');
+        }
+
+        /* --------------------------------------------------------------------------
+           7. RENDERIZADO VISUAL DINÁMICO DE LA INTERFAZ
+           -------------------------------------------------------------------------- */
+        function renderUI() {
+            const scoreboardList = document.getElementById('scoreboardList');
+            if (scoreboardList) {
+                scoreboardList.innerHTML = gameState.players.map(p => `
+                    <div class="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black ${p.id === gameState.cantoraIndex ? 'bg-yellow-500/20 text-hdpYellow border border-yellow-500/50 shadow-sm' : 'bg-zinc-900 text-zinc-300'}">
+                        <span>${p.name}</span>
+                        <span class="bg-black/80 px-1.5 py-0.5 rounded text-[10px] text-white">${p.score}</span>
+                    </div>
+                `).join('');
+            }
+
+            document.getElementById('roundNumber').innerText = `Ronda ${gameState.currentRound} / 10`;
+            const cantora = gameState.players[gameState.cantoraIndex];
+            document.getElementById('cantoraNameText').innerText = cantora ? cantora.name : "Jugador 1";
+            document.getElementById('blackCardText').innerText = gameState.currentBlackCard ? gameState.currentBlackCard.text : "...";
+
+            document.getElementById('submissionCountText').innerText = gameState.submissions.length;
+            document.getElementById('totalPlayersText').innerText = gameState.players.length;
+
+            const statusBadge = document.getElementById('statusBadge');
+            const subContainer = document.getElementById('submissionContainer');
+            const cardsHand = document.getElementById('cardsHand');
+            const mainBtn = document.getElementById('mainActionButton');
+            const turnNameText = document.getElementById('currentPlayerTurnName');
+            const handCountBadge = document.getElementById('handCountBadge');
+
+            if (gameState.phase === 'SUBMITTING') {
+                const activePlayer = gameState.players[gameState.submittingPlayerIndex];
+                if (statusBadge) statusBadge.innerText = `Turno de tirar: ${activePlayer.name}`;
+                if (turnNameText) turnNameText.innerText = activePlayer.name;
+                if (handCountBadge) handCountBadge.innerText = `${activePlayer.hand.length} cartas restantes`;
+
+                if (subContainer) {
+                    subContainer.innerHTML = gameState.submissions.map(() => `
+                        <div class="w-24 h-36 bg-zinc-900 border-2 border-zinc-800 rounded-xl flex items-center justify-center card-shadow animate-pulse">
+                            <span class="text-xs font-black text-zinc-700 font-impact tracking-widest">H.D.P.</span>
+                        </div>
+                    `).join('');
+                }
+
+                if (cardsHand) {
+                    cardsHand.innerHTML = activePlayer.hand.map((card, i) => `
+                        <div onclick="selectCardFromHand(${i})" class="w-36 h-52 sm:w-40 sm:h-56 bg-white text-black p-3.5 rounded-2xl border-2 ${gameState.selectedCardHandIndex === i ? 'border-hdpRed active-glow transform -translate-y-3' : 'border-zinc-300 hover:border-zinc-400'} card-shadow card-hover-effect flex flex-col justify-between cursor-pointer flex-shrink-0 transition">
+                            <p class="text-xs font-bold leading-snug">${card}</p>
+                            <span class="text-[9px] font-black text-zinc-400 uppercase tracking-widest">H.D.P.</span>
+                        </div>
+                    `).join('');
+                }
+
+                if (mainBtn) {
+                    mainBtn.disabled = gameState.selectedCardHandIndex === null;
+                    mainBtn.className = gameState.selectedCardHandIndex === null 
+                        ? 'px-6 py-2.5 bg-zinc-800 text-zinc-600 font-black uppercase text-xs rounded-xl shadow-lg cursor-not-allowed flex items-center gap-2 transition'
+                        : 'px-6 py-2.5 bg-hdpRed hover:bg-red-700 text-white font-black uppercase text-xs rounded-xl shadow-lg cursor-pointer flex items-center gap-2 transition shadow-red-900/50';
+                }
+
+            } else if (gameState.phase === 'VOTING') {
+                const activeVoter = gameState.players[gameState.votingPlayerIndex];
+                if (statusBadge) statusBadge.innerText = `Fase de Votación: Turno de ${activeVoter.name}`;
+                if (turnNameText) turnNameText.innerText = activeVoter.name;
+
+                if (subContainer) {
+                    subContainer.innerHTML = gameState.submissions.map((sub, idx) => {
+                        const isMyOwn = sub.playerId === activeVoter.id;
+                        return `
+                            <div onclick="${isMyOwn ? '' : `voteForCard(${idx})`}" class="w-36 h-52 sm:w-40 sm:h-56 bg-white text-black p-3.5 rounded-2xl border-2 ${isMyOwn ? 'border-zinc-500 opacity-50 cursor-not-allowed' : 'border-zinc-300 hover:border-hdpYellow cursor-pointer hover:scale-105 shadow-yellow-500/10'} card-shadow flex flex-col justify-between transition">
+                                <p class="text-xs font-bold leading-snug">${sub.cardText}</p>
+                                <div class="flex justify-between items-center text-[9px] font-black text-zinc-500">
+                                    <span>H.D.P.</span>
+                                    ${isMyOwn ? '<span class="text-red-500 font-bold">TU CARTA</span>' : '<span class="text-hdpYellow bg-black px-1.5 py-0.5 rounded font-bold">VOTAR</span>'}
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                }
+
+                if (cardsHand) {
+                    cardsHand.innerHTML = `<div class="w-full text-center py-10 text-xs text-zinc-500 font-bold tracking-wider uppercase">🍺 Votación sobre la mesa: Seleccionen la mejor respuesta</div>`;
+                }
+
+                if (mainBtn) {
+                    mainBtn.disabled = true;
+                    mainBtn.className = 'px-6 py-2.5 bg-zinc-800 text-zinc-600 font-black uppercase text-xs rounded-xl shadow-lg cursor-not-allowed flex items-center gap-2 transition';
+                }
+
+            } else if (gameState.phase === 'ROUND_RESULTS') {
+                if (statusBadge) statusBadge.innerText = `¡Ronda completada! Otorgando punto...`;
+                if (subContainer) {
+                    subContainer.innerHTML = gameState.submissions.map((sub) => `
+                        <div class="w-36 h-52 sm:w-40 sm:h-56 bg-white text-black p-3.5 rounded-2xl border-2 border-hdpYellow card-shadow flex flex-col justify-between">
+                            <p class="text-xs font-bold leading-snug">${sub.cardText}</p>
+                            <span class="text-[9px] font-black text-zinc-500">H.D.P.</span>
+                        </div>
+                    `).join('');
+                }
+            }
+        }
+
+        /* --------------------------------------------------------------------------
+           8. MULTIJUGADOR ONLINE Y SALAS P2P CON MANEJO SEGURO DE WEBSOCKETS
+           -------------------------------------------------------------------------- */
+        function isWebSocketAllowed() {
+            try {
+                // Verificar si el entorno iFrame / Canvas bloquea la creación de WebSockets
+                const testWs = new WebSocket('wss://echo.websocket.org');
+                testWs.close();
+                return true;
+            } catch (e) {
+                return false;
+            }
+        }
+
+        function showWebSocketBlockedWarning() {
+            const notice = document.getElementById('websocketBlockedNotice');
+            if (notice) notice.classList.remove('hidden');
+        }
+
+        function setupOnlineHost() {
+            if (!isWebSocketAllowed()) {
+                showWebSocketBlockedWarning();
+                return;
+            }
+
+            document.getElementById('hostRoomUI').classList.remove('hidden');
+            document.getElementById('joinRoomUI').classList.add('hidden');
+            
+            const roomCode = "HDP" + Math.floor(1000 + Math.random() * 9000);
+            gameState.roomId = roomCode;
+
+            const roomLink = window.location.origin + window.location.pathname + "?room=" + roomCode;
+            document.getElementById('roomLinkInput').value = roomLink;
+
+            const qrContainer = document.getElementById('qrcode');
+            if (qrContainer) {
+                qrContainer.innerHTML = '';
+                try {
+                    new QRCode(qrContainer, {
+                        text: roomLink,
+                        width: 120,
+                        height: 120
+                    });
+                } catch (e) {
+                    console.warn("QR code generator warning:", e);
+                }
+            }
+
+            try {
+                if (peer) {
+                    try { peer.destroy(); } catch (e) {}
+                }
+
+                peer = new Peer(roomCode, { debug: 1 });
+
+                peer.on('open', (id) => {
+                    console.log("Sala P2P creada con ID:", id);
+                });
+
+                peer.on('connection', (c) => {
+                    conn = c;
+                    conn.on('data', (data) => {
+                        if (data.type === 'JOIN') {
+                            onlinePeers.push(data.name);
+                            const countElem = document.getElementById('onlinePlayerCount');
+                            const listElem = document.getElementById('onlinePlayerList');
+                            if (countElem) countElem.innerText = onlinePeers.length + 1;
+                            if (listElem) listElem.innerHTML = onlinePeers.map(n => `<span class="bg-zinc-800 px-2 py-1 rounded text-white">${n}</span>`).join('');
+                            
+                            conn.send({ type: 'WELCOME', players: onlinePeers });
+                        }
+                    });
+                });
+
+                peer.on('error', (err) => {
+                    console.warn("PeerJS connection issue caught:", err);
+                    showWebSocketBlockedWarning();
+                });
+            } catch (err) {
+                console.warn("SecurityError caught while opening PeerJS connection:", err);
+                showWebSocketBlockedWarning();
+            }
+        }
+
+        function copyRoomLink() {
+            const input = document.getElementById('roomLinkInput');
+            input.select();
+            document.execCommand('copy');
+            alert("¡Enlace de sala copiado al portapapeles!");
+        }
+
+        function showJoinRoomInput() {
+            if (!isWebSocketAllowed()) {
+                showWebSocketBlockedWarning();
+                return;
+            }
+            document.getElementById('joinRoomUI').classList.remove('hidden');
+            document.getElementById('hostRoomUI').classList.add('hidden');
+        }
+
+        function connectToOnlineRoom() {
+            if (!isWebSocketAllowed()) {
+                showWebSocketBlockedWarning();
+                return;
+            }
+
+            const roomCode = document.getElementById('joinRoomInput').value.trim().toUpperCase();
+            const status = document.getElementById('joinStatusText');
+            const myName = document.getElementById('p1Name').value.trim() || "Jugador 2";
+
+            if (!roomCode) {
+                if (status) status.innerText = "Ingresá un código de sala válido.";
+                return;
+            }
+
+            if (status) status.innerText = "Conectando a la sala " + roomCode + "...";
+
+            try {
+                if (peer) {
+                    try { peer.destroy(); } catch (e) {}
+                }
+
+                peer = new Peer({ debug: 1 });
+
+                peer.on('open', () => {
+                    try {
+                        conn = peer.connect(roomCode);
+                        conn.on('open', () => {
+                            if (status) status.innerText = "¡Conectado a la sala! Esperando al Host...";
+                            conn.send({ type: 'JOIN', name: myName });
+                        });
+                        conn.on('data', (data) => {
+                            if (data.type === 'WELCOME') {
+                                if (status) status.innerText = "¡Sincronizado con la sala!";
+                            }
+                        });
+                    } catch (e) {
+                        showWebSocketBlockedWarning();
+                    }
+                });
+
+                peer.on('error', (err) => {
+                    console.warn("PeerJS Client Error:", err);
+                    showWebSocketBlockedWarning();
+                });
+            } catch (err) {
+                showWebSocketBlockedWarning();
+            }
+        }
+    </script>
+</body>
+</html>
