@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#09090b"><title>H.D.P. — Hasta Dónde Podés</title>
-<link rel="stylesheet" href="styles.css?v=20261029-4">
+<link rel="stylesheet" href="styles.css?v=20261029-5">
 </head>
 <body>
 <header class="topbar">
@@ -14,6 +14,7 @@
 <main>
 <section id="setup" class="setup panel">
   <div class="hero"><p class="eyebrow">HUMOR NEGRO · AMIGOS · CAOS</p><h1>¿HASTA DÓNDE<br><em>PODÉS</em> LLEGAR?</h1><p>Completá la consigna. Bancate las respuestas. Elegí la peor… o la mejor.</p></div>
+  <div class="music-controls music-dock" aria-label="Controles de audio"><span class="music-dock-label">♫ AUDIO</span><button class="btn secondary" id="musicToggle" type="button">Música: no</button><label class="volume-label" for="musicVolume">Música</label><input id="musicVolume" type="range" min="0" max="0.45" step="0.01" value="0.18" aria-label="Volumen de música"><button class="btn secondary" id="sfxToggle" type="button">Efectos: sí</button><label class="volume-label" for="sfxVolume">Efectos</label><input id="sfxVolume" type="range" min="0" max="0.5" step="0.01" value="0.22" aria-label="Volumen de efectos"></div>
 
 
   <div class="setup-grid">
@@ -41,11 +42,11 @@
   <section class="hand-panel panel"><div class="hand-head"><div><span class="eyebrow">TU MANO</span><h2 id="handTitle">Elegí una carta</h2></div><span class="pill" id="handCount">10 cartas</span></div><div id="hand" class="hand"></div><div id="handActions" class="hand-actions"></div></section>
 </section>
 </main>
-<div class="music-controls music-dock" aria-label="Controles de audio"><span class="music-dock-label">♫ AUDIO</span><button class="btn secondary" id="musicToggle" type="button">Música: no</button><label class="volume-label" for="musicVolume">Música</label><input id="musicVolume" type="range" min="0" max="0.45" step="0.01" value="0.22" aria-label="Volumen de música"><button class="btn secondary" id="sfxToggle" type="button">Efectos: sí</button><label class="volume-label" for="sfxVolume">Efectos</label><input id="sfxVolume" type="range" min="0" max="0.5" step="0.01" value="0.22" aria-label="Volumen de efectos"></div>
+
 <div id="privacy" class="overlay hidden"><div class="modal"><div class="big-icon">◉</div><p class="eyebrow">TURNO PRIVADO</p><h2>Pasale la pantalla</h2><p>Ahora juega <strong id="privacyName">Jugador 2</strong>. Que nadie mire sus cartas.</p><button class="btn primary big" id="privacyOk">Ya tengo la pantalla</button></div></div>
 <div id="rules" class="overlay hidden"><div class="modal rules-modal"><button class="close" id="closeRules">×</button><p class="eyebrow">CÓMO SE JUEGA</p><h2>Reglas de la mesa</h2><ol><li>Cada jugador recibe <b>10 cartas blancas</b>. No se reponen.</li><li>La <b>Cantora</b> rota cada ronda y lee la consigna negra.</li><li>Todos eligen una carta blanca en secreto.</li><li>Cuando todos jugaron, se mezclan y la Cantora lee las respuestas una por una.</li><li>Todos votan la respuesta que prefieren. Está prohibido votarse a sí mismo.</li><li>La carta ganadora suma 1 punto. Si hay empate por el primer puesto, todos vuelven a votar, pero solo entre las respuestas empatadas. Se repite hasta que haya una ganadora.</li><li>La partida termina cuando todos se quedan sin cartas. Gana quien tenga más puntos.</li></ol><button class="btn primary" id="rulesOk">Entendido</button></div></div>
 <div id="toast" role="status" aria-live="polite"></div>
 <footer><span>H.D.P. · EDICIÓN COMUNITARIA</span><button id="deckBtn" class="text-btn">Editar mazo propio</button></footer>
 <div id="deckModal" class="overlay hidden"><div class="modal deck-modal"><button class="close" id="closeDeck">×</button><p class="eyebrow">PERSONALIZACIÓN</p><h2>Editar mazo propio</h2><p id="deckModalHint" class="muted">Las cartas se guardan en este navegador.</p><label for="blackEditor">Consignas negras (una por línea)</label><textarea id="blackEditor" rows="7"></textarea><label for="whiteEditor">Respuestas blancas (una por línea)</label><textarea id="whiteEditor" rows="10"></textarea><div class="online-actions"><button class="btn secondary" id="resetDeck">Restaurar mazo base</button><button class="btn primary" id="saveDeck">Guardar mazo</button></div></div></div>
-<script src="app.js?v=20261029-4"></script>
+<script src="app.js?v=20261029-5"></script>
 </body></html>
