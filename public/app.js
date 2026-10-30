@@ -136,17 +136,23 @@ async function toggleLounge(){
  const button=$('musicToggle');
  try{
   if(!loungeAudio){
-   const Ctx=window.AudioContext||window.webkitAudioContext;if(!Ctx)return toast('Tu navegador no admite música ambiental.');
+   const Ctx=window.AudioContext||window.webkitAudioContext;
+   if(!Ctx)return toast('Tu navegador no admite música ambiental.');
    const ctx=new Ctx(),master=ctx.createGain(),compressor=ctx.createDynamicsCompressor();
    master.gain.value=loungeVolume;compressor.threshold.value=-22;compressor.knee.value=18;compressor.ratio.value=3;compressor.attack.value=0.015;compressor.release.value=0.22;
    master.connect(compressor);compressor.connect(ctx.destination);loungeAudio={ctx,master};
   }
-  if(loungeAudio.ctx.state==='running'){
-   await loungeAudio.ctx.suspend();clearInterval(loungeTimer);loungeTimer=null;button.textContent='Encender';
+  const ctx=loungeAudio.ctx;
+  if(ctx.state==='running'){
+   await ctx.suspend();clearInterval(loungeTimer);loungeTimer=null;button.textContent='Música: no';
   }else{
-   await loungeAudio.ctx.resume();loungeBeat();if(!loungeTimer)loungeTimer=setInterval(loungeBeat,500);button.textContent='♫ Apagar música';
+   await ctx.resume();
+   if(ctx.state!=='running')throw new Error('AudioContext no pudo activarse');
+   loungeBeat();
+   if(!loungeTimer)loungeTimer=setInterval(loungeBeat,500);
+   button.textContent='♫ Música: sí';
   }
- }catch(e){toast('No se pudo iniciar el audio en este navegador.');}
+ }catch(e){button.textContent='Música: no';toast('No se pudo iniciar el audio. Probá nuevamente o revisá el permiso de sonido del navegador.');}
 }
 function setLoungeVolume(value){loungeVolume=Number(value);if(loungeAudio)loungeAudio.master.gain.setTargetAtTime(loungeVolume,loungeAudio.ctx.currentTime,0.08)}
 
