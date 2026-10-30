@@ -221,9 +221,9 @@ function handle(ws, msg) {
       if(g.votes[p.id]!==undefined) return error(ws,'Ya votaste esta ronda.');
       const idx=Number(d.index), sub=g.submissions[idx];
       if(!sub) return error(ws,'Respuesta inválida.');
-      if(sub.ownerId===p.id) return error(ws,'No podés votar tu propia carta.');
+      if(!g.tiebreakCandidates&&sub.ownerId===p.id) return error(ws,'No podés votar tu propia carta en la votación inicial.');
       const candidates=g.tiebreakCandidates||g.submissions.map((_,i)=>i);if(!candidates.includes(idx))return error(ws,'Esa respuesta no participa del desempate.');g.votes[p.id]=idx;sub.votes++;
-      if(Object.keys(g.votes).length===g.players.length){const max=Math.max(...candidates.map(i=>g.submissions[i].votes)),tied=candidates.filter(i=>g.submissions[i].votes===max);if(tied.length>1){g.tiebreakCandidates=tied;g.tiebreakRound++;g.votes={};g.submissions.forEach(x=>x.votes=0);g.message='¡Empate! Todos vuelven a votar, solo entre las respuestas empatadas.'}else{const winner=player(room,g.submissions[tied[0]].ownerId);if(winner)winner.score++;g.tiebreakCandidates=null;g.phase='RESULTS';g.message='¡Tenemos una respuesta ganadora!'}}
+      if(Object.keys(g.votes).length===g.players.length){const max=Math.max(...candidates.map(i=>g.submissions[i].votes)),tied=candidates.filter(i=>g.submissions[i].votes===max);if(tied.length>1){g.tiebreakCandidates=tied;g.tiebreakRound++;g.votes={};g.submissions.forEach(x=>x.votes=0);g.message='¡Desempate! Se muestran solo las respuestas empatadas. Todos pueden votar cualquiera, incluso su propia respuesta.'}else{const winner=player(room,g.submissions[tied[0]].ownerId);if(winner)winner.score++;g.tiebreakCandidates=null;g.phase='RESULTS';g.message='¡Tenemos una respuesta ganadora!'}}
       broadcast(room); return;
     }
     if(d.type==='NEXT_ROUND') {
