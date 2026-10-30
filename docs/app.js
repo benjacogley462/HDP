@@ -86,32 +86,45 @@ function saveDeckEditor(){
  }
 }
 
-let loungeAudio=null,loungeTimer=null,loungeStep=0,loungeVolume=0.22;
-function loungeNote(freq,start,duration,type='sine',gain=0.025){
- const ctx=loungeAudio.ctx,osc=ctx.createOscillator(),amp=ctx.createGain();
+let loungeAudio=null,loungeTimer=null,loungeStep=0,loungeVolume=0.18;
+const loungePatterns=[
+ {root:110,chord:[220,261.63,329.63,392],bass:[55,82.41,110,82.41],melody:[440,523.25,587.33,523.25,392,440,523.25,659.25]},
+ {root:98,chord:[196,246.94,293.66,369.99],bass:[49,73.42,98,73.42],melody:[392,493.88,587.33,493.88,369.99,392,493.88,587.33]},
+ {root:130.81,chord:[261.63,311.13,392,466.16],bass:[65.41,98,130.81,98],melody:[523.25,622.25,783.99,698.46,622.25,523.25,466.16,523.25]},
+ {root:87.31,chord:[174.61,220,261.63,329.63],bass:[43.65,65.41,87.31,65.41],melody:[349.23,440,523.25,440,329.63,349.23,440,523.25]}
+];
+function loungeTone(freq,start,duration,type,gain,pan=0){
+ const ctx=loungeAudio.ctx,osc=ctx.createOscillator(),amp=ctx.createGain(),stereo=ctx.createStereoPanner();
  osc.type=type;osc.frequency.setValueAtTime(freq,start);
- amp.gain.setValueAtTime(0.0001,start);amp.gain.exponentialRampToValueAtTime(gain,start+0.025);amp.gain.exponentialRampToValueAtTime(0.0001,start+duration);
- osc.connect(amp);amp.connect(loungeAudio.master);osc.start(start);osc.stop(start+duration+0.04);
+ amp.gain.setValueAtTime(0.0001,start);amp.gain.exponentialRampToValueAtTime(Math.max(0.0002,gain),start+0.035);amp.gain.exponentialRampToValueAtTime(0.0001,start+duration);
+ stereo.pan.setValueAtTime(pan,start);osc.connect(amp);amp.connect(stereo);stereo.connect(loungeAudio.master);osc.start(start);osc.stop(start+duration+0.05);
+}
+function loungeKick(start){
+ const ctx=loungeAudio.ctx,osc=ctx.createOscillator(),amp=ctx.createGain();
+ osc.type='sine';osc.frequency.setValueAtTime(105,start);osc.frequency.exponentialRampToValueAtTime(42,start+0.16);
+ amp.gain.setValueAtTime(0.0001,start);amp.gain.exponentialRampToValueAtTime(0.055,start+0.008);amp.gain.exponentialRampToValueAtTime(0.0001,start+0.19);
+ osc.connect(amp);amp.connect(loungeAudio.master);osc.start(start);osc.stop(start+0.21);
+}
+function loungeNoise(start,duration,level,highpass=1200){
+ const ctx=loungeAudio.ctx,count=Math.floor(ctx.sampleRate*duration),buffer=ctx.createBuffer(1,count,ctx.sampleRate),data=buffer.getChannelData(0);
+ for(let i=0;i<count;i++)data[i]=(Math.random()*2-1)*(1-i/count);
+ const src=ctx.createBufferSource(),filter=ctx.createBiquadFilter(),amp=ctx.createGain();
+ src.buffer=buffer;filter.type='highpass';filter.frequency.value=highpass;amp.gain.setValueAtTime(level,start);amp.gain.exponentialRampToValueAtTime(0.0001,start+duration);
+ src.connect(filter);filter.connect(amp);amp.connect(loungeAudio.master);src.start(start);
 }
 function loungeBeat(){
  if(!loungeAudio||loungeAudio.ctx.state!=='running')return;
- const ctx=loungeAudio.ctx,now=ctx.currentTime+0.04;
- const chords=[[130.81,164.81,196,233.08],[110,130.81,164.81,196],[146.83,174.61,220,261.63],[98,123.47,146.83,185]];
- const chord=chords[Math.floor(loungeStep/4)%4];
- if(loungeStep%4===0)chord.forEach((f,i)=>loungeNote(f,now,1.65,'sine',0.009));
- const bass=[65.41,98,87.31,110,73.42,110,61.74,92.5][loungeStep%8];
- loungeNote(bass,now,0.42,'triangle',0.045);
- if(loungeStep%2===1)loungeNote(bass*2,now+0.16,0.18,'triangle',0.018);
- const melody=[392,440,523.25,493.88,440,392,349.23,392,440,523.25,587.33,523.25,493.88,440,392,349.23];
- const f=melody[loungeStep%melody.length];
- loungeNote(f,now+0.04,0.24,'sine',0.012);
- // Soft brushed-snare texture and subdued room noise.
- if(loungeStep%2===0){
-  const n=ctx.createBufferSource(),buf=ctx.createBuffer(1,Math.floor(ctx.sampleRate*0.12),ctx.sampleRate),data=buf.getChannelData(0);
-  for(let i=0;i<data.length;i++)data[i]=(Math.random()*2-1)*(1-i/data.length);
-  n.buffer=buf;const filter=ctx.createBiquadFilter();filter.type='lowpass';filter.frequency.value=1800;
-  const g=ctx.createGain();g.gain.value=0.006;n.connect(filter);filter.connect(g);g.connect(loungeAudio.master);n.start(now+0.02);
+ const ctx=loungeAudio.ctx,now=ctx.currentTime+0.035,step=loungeStep%16,bar=Math.floor(loungeStep/16),pattern=loungePatterns[Math.floor(bar/2)%loungePatterns.length];
+ if(step===0||step===8)pattern.chord.forEach((f,i)=>loungeTone(f,now,3.7,'sine',0.006,i%2?0.35:-0.35));
+ const bass=pattern.bass[step%4];loungeTone(bass,now,step%4===0?0.42:0.28,'triangle',0.038,-0.12);
+ if(step%4===2)loungeTone(bass*2,now+0.035,0.16,'triangle',0.012,0.12);
+ if(step%2===0){
+  const note=pattern.melody[(Math.floor(step/2)+bar)%pattern.melody.length];
+  loungeTone(note,now+0.015,0.32,'sine',0.012,(step%4===0)?0.28:-0.28);
  }
+ if(step%4===0)loungeKick(now);
+ if(step%4===2)loungeNoise(now,0.075,0.008,1800);
+ if(step%2===1)loungeNoise(now,0.035,0.0025,5500);
  loungeStep++;
 }
 async function toggleLounge(){
@@ -119,36 +132,18 @@ async function toggleLounge(){
  try{
   if(!loungeAudio){
    const Ctx=window.AudioContext||window.webkitAudioContext;if(!Ctx)return toast('Tu navegador no admite música ambiental.');
-   const ctx=new Ctx(),master=ctx.createGain();master.gain.value=loungeVolume;master.connect(ctx.destination);loungeAudio={ctx,master};
+   const ctx=new Ctx(),master=ctx.createGain(),compressor=ctx.createDynamicsCompressor();
+   master.gain.value=loungeVolume;compressor.threshold.value=-22;compressor.knee.value=18;compressor.ratio.value=3;compressor.attack.value=0.015;compressor.release.value=0.22;
+   master.connect(compressor);compressor.connect(ctx.destination);loungeAudio={ctx,master};
   }
   if(loungeAudio.ctx.state==='running'){
-   await loungeAudio.ctx.suspend();clearInterval(loungeTimer);loungeTimer=null;button.textContent='♫ Música: apagada';
+   await loungeAudio.ctx.suspend();clearInterval(loungeTimer);loungeTimer=null;button.textContent='Encender';
   }else{
-   await loungeAudio.ctx.resume();loungeBeat();if(!loungeTimer)loungeTimer=setInterval(loungeBeat,600);button.textContent='♫ Música: encendida';
+   await loungeAudio.ctx.resume();loungeBeat();if(!loungeTimer)loungeTimer=setInterval(loungeBeat,500);button.textContent='♫ Apagar música';
   }
  }catch(e){toast('No se pudo iniciar el audio en este navegador.');}
 }
 function setLoungeVolume(value){loungeVolume=Number(value);if(loungeAudio)loungeAudio.master.gain.setTargetAtTime(loungeVolume,loungeAudio.ctx.currentTime,0.08)}
-
-$('spotifyConnect').addEventListener('click',connectSpotify);$('spotifyDisconnect').addEventListener('click',disconnectSpotify);
-
-const SPOTIFY_CLIENT_ID='68485778f4e642409532df69d59b89fb';
-const SPOTIFY_TOKEN_KEY='hdp-spotify-token-v1',SPOTIFY_VERIFIER_KEY='hdp-spotify-verifier-v1',SPOTIFY_STATE_KEY='hdp-spotify-state-v1';
-const spotifyRedirectUri=()=>window.location.origin+window.location.pathname;
-function spotifyConfigured(){return SPOTIFY_CLIENT_ID&&!SPOTIFY_CLIENT_ID.startsWith('PEGAR_')}
-function spotifyStatus(message,connected=false){$('spotifyStatus').textContent=message;$('spotifyConnect').disabled=!spotifyConfigured()||connected;$('spotifyConnect').textContent=connected?'Spotify conectado':'Conectar Spotify';$('spotifyDisconnect').classList.toggle('hidden',!connected);$('spotifyProfile').classList.toggle('hidden',!connected)}
-function spotifyB64(bytes){return btoa(String.fromCharCode(...new Uint8Array(bytes))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')}
-function spotifyRandom(n){return spotifyB64(crypto.getRandomValues(new Uint8Array(n))).slice(0,n)}
-async function connectSpotify(){if(!spotifyConfigured())return toast('Falta configurar el Client ID de Spotify.');const verifier=spotifyRandom(64),state=spotifyRandom(32),digest=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(verifier)),challenge=spotifyB64(digest);sessionStorage.setItem(SPOTIFY_VERIFIER_KEY,verifier);sessionStorage.setItem(SPOTIFY_STATE_KEY,state);const q=new URLSearchParams({client_id:SPOTIFY_CLIENT_ID,response_type:'code',redirect_uri:spotifyRedirectUri(),code_challenge_method:'S256',code_challenge:challenge,state,scope:'user-read-private user-read-email'});location.href='https://accounts.spotify.com/authorize?'+q}
-async function spotifyToken(data){const r=await fetch('https://accounts.spotify.com/api/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({...data,client_id:SPOTIFY_CLIENT_ID})});const j=await r.json();if(!r.ok)throw new Error(j.error||'Error de Spotify');return j}
-function saveSpotifyToken(t,old={}){const v={refresh_token:t.refresh_token||old.refresh_token,access_token:t.access_token,expires_at:Date.now()+(t.expires_in||3600)*1000};localStorage.setItem(SPOTIFY_TOKEN_KEY,JSON.stringify(v));return v}
-async function spotifyMe(token){const r=await fetch('https://api.spotify.com/v1/me',{headers:{Authorization:'Bearer '+token.access_token}});let data={};try{data=await r.json()}catch(_e){}if(!r.ok){const detail=data.error?.message||data.error_description||data.error||'sin detalle';throw new Error('Spotify respondió HTTP '+r.status+': '+detail)}return data}
-async function showSpotify(token){const p=await spotifyMe(token);$('spotifyProfile').textContent='Conectado como '+(p.display_name||p.id);spotifyStatus('Cuenta vinculada. Se reconectará automáticamente en este navegador.',true)}
-async function finishSpotify(){const q=new URLSearchParams(location.search),code=q.get('code'),state=q.get('state'),err=q.get('error');if(!code&&!err)return false;history.replaceState({},document.title,spotifyRedirectUri());if(err){spotifyStatus('No se autorizó Spotify.');return true}const expected=sessionStorage.getItem(SPOTIFY_STATE_KEY),verifier=sessionStorage.getItem(SPOTIFY_VERIFIER_KEY);sessionStorage.removeItem(SPOTIFY_STATE_KEY);sessionStorage.removeItem(SPOTIFY_VERIFIER_KEY);if(!state||state!==expected||!verifier){spotifyStatus('No se pudo verificar el inicio de sesión.');return true}try{const t=await spotifyToken({grant_type:'authorization_code',code,redirect_uri:spotifyRedirectUri(),code_verifier:verifier});await showSpotify(saveSpotifyToken(t));toast('¡Spotify quedó vinculado!')}catch(e){spotifyStatus('No se pudo vincular Spotify.');toast(e.message)}return true}
-async function restoreSpotify(){if(!spotifyConfigured()){spotifyStatus('Falta configurar el Client ID de Spotify.');return}const raw=localStorage.getItem(SPOTIFY_TOKEN_KEY);if(!raw){spotifyStatus('Todavía no vinculaste tu cuenta.');return}try{let t=JSON.parse(raw);if(!t.refresh_token)throw Error('invalid_grant');if(!t.access_token||t.expires_at<Date.now()+60000)t=saveSpotifyToken(await spotifyToken({grant_type:'refresh_token',refresh_token:t.refresh_token}),t);await showSpotify(t)}catch(e){if(String(e.message).includes('invalid_grant')){localStorage.removeItem(SPOTIFY_TOKEN_KEY);spotifyStatus('La autorización venció. Volvé a conectar Spotify.')}else spotifyStatus('No se pudo restaurar Spotify. Volvé a intentarlo.')}}
-function disconnectSpotify(){localStorage.removeItem(SPOTIFY_TOKEN_KEY);$('spotifyProfile').textContent='';spotifyStatus('Cuenta de Spotify desconectada.');toast('Spotify desconectado de este navegador.')}
-async function initSpotify(){spotifyStatus('Revisando tu cuenta de Spotify…');if(!spotifyConfigured()){$('spotifyConnect').disabled=true;spotifyStatus('Falta configurar el Client ID de Spotify.');return}if(!await finishSpotify())await restoreSpotify()}
-initSpotify().catch(error=>{console.error('Error al iniciar Spotify:',error);spotifyStatus('No se pudo comprobar Spotify. Probá recargar la página.')});
 
 $('mode').addEventListener('change',switchMode);$('addName').onclick=()=>{if(localPlayers.length>=7)return toast('Máximo 8 jugadores contando al anfitrión.');localPlayers.push(`Jugador ${localPlayers.length+2}`);renderNames()};$('startLocal').onclick=startLocal;$('privacyOk').onclick=privacyOk;$('rulesBtn').onclick=()=>show('rules');$('closeRules').onclick=$('rulesOk').onclick=()=>hide('rules');$('createRoom').onclick=createRoom;$('joinRoom').onclick=joinRoom;$('deckBtn').onclick=()=>{if(mode==='online'&&(!online.host||online.state?.phase!=='LOBBY'))return toast('La edición del mazo está reservada al anfitrión antes de iniciar.');openDeck()};$('closeDeck').onclick=()=>hide('deckModal');$('saveDeck').onclick=saveDeckEditor;$('resetDeck').onclick=()=>{deckBlack=[...BASE_BLACK];deckWhite=[...BASE_WHITE];$('blackEditor').value=deckBlack.join('\n');$('whiteEditor').value=deckWhite.join('\n')};
 loadDeck();$('musicToggle').addEventListener('click',toggleLounge);$('musicVolume').addEventListener('input',e=>setLoungeVolume(e.target.value));localPlayers=['Jugador 2','Jugador 3'];renderNames();switchMode();
