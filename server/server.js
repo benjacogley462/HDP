@@ -134,6 +134,7 @@ function publicState(room, viewerId=null) {
     blackCard:g.blackCard, players:g.players.map(p=>({id:p.id,name:p.name,score:p.score,connected:p.connected,handCount:p.hand.length})),
     myHand:g.players.find(p=>p.id===viewerId)?.hand || [],
     submissions:g.submissions.map((s,i)=>({index:i,card:s.card,ownerId:g.phase==='READING' || g.phase==='VOTING' || g.phase==='RESULTS' ? s.ownerId : null, votes:g.phase==='RESULTS'?s.votes:undefined})),
+    tiebreakCandidates:g.tiebreakCandidates, tiebreakRound:g.tiebreakRound,
     submittedIds:g.submissions.map(s=>s.ownerId), votedIds:Object.keys(g.votes),
     readingIndex:g.readingIndex, message:g.message || ''
   };
@@ -150,7 +151,7 @@ function startGame(room) {
   room.game = {
     players: room.players.map(p=>({...p, score:0, hand:whiteDeck.splice(0,10)})),
     blackDeck, whiteDeck, round:1, cantorIndex:0, blackCard:null,
-    submissions:[], votes:{}, phase:'SUBMITTING', readingIndex:0, message:'Elegí una carta en secreto.'
+    submissions:[], votes:{}, tiebreakCandidates:null, tiebreakRound:0, phase:'SUBMITTING', readingIndex:0, message:'Elegí una carta en secreto.'
   };
   room.players = room.game.players;
   beginRound(room);
@@ -159,7 +160,7 @@ function beginRound(room) {
   const g=room.game;
   if (g.players.every(p=>p.hand.length===0)) { g.phase='GAME_OVER'; g.message='¡Partida terminada!'; return; }
   if (!g.blackDeck.length) g.blackDeck=shuffle(room.deck.black);
-  g.blackCard=g.blackDeck.pop(); g.submissions=[]; g.votes={}; g.readingIndex=0;
+  g.blackCard=g.blackDeck.pop(); g.submissions=[]; g.votes={}; g.tiebreakCandidates=null; g.tiebreakRound=0; g.readingIndex=0;
   g.phase='SUBMITTING'; g.message='Cada jugador elige una carta blanca.';
 }
 function player(room,id) { return room.players.find(p=>p.id===id); }
@@ -221,12 +222,8 @@ function handle(ws, msg) {
       const idx=Number(d.index), sub=g.submissions[idx];
       if(!sub) return error(ws,'Respuesta inválida.');
       if(sub.ownerId===p.id) return error(ws,'No podés votar tu propia carta.');
-      g.votes[p.id]=idx; sub.votes++;
-      if(Object.keys(g.votes).length===g.players.length) {
-        const max=Math.max(...g.submissions.map(s=>s.votes));
-        g.submissions.filter(s=>s.votes===max).forEach(s=>{ const winner=player(room,s.ownerId); if(winner) winner.score+=1; });
-        g.phase='RESULTS'; g.message='Resultado de la ronda. El punto se comparte si hay empate.';
-      }
+      const candidates=g.tiebreakCandidates||g.submissions.map((_,i)=>i);if(!candidates.includes(idx))return error(ws,'Esa respuesta no participa del desempate.');g.votes[p.id]=idx;sub.votes++;
+      if(Object.keys(g.votes).length===g.players.length){const max=Math.max(...candidates.map(i=>g.submissions[i].votes)),tied=candidates.filter(i=>g.submissions[i].votes===max);if(tied.length>1){g.tiebreakCandidates=tied;g.tiebreakRound++;g.votes={};g.submissions.forEach(x=>x.votes=0);g.message='¡Empate! Todos vuelven a votar, solo entre las respuestas empatadas.'}else{const winner=player(room,g.submissions[tied[0]].ownerId);if(winner)winner.score++;g.tiebreakCandidates=null;g.phase='RESULTS';g.message='¡Tenemos una respuesta ganadora!'}}
       broadcast(room); return;
     }
     if(d.type==='NEXT_ROUND') {
