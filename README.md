@@ -45,6 +45,16 @@ Para probar online desde otros dispositivos en la misma Wi-Fi, abrí `http://IP-
 
 También podés desplegar el directorio `server/` en Railway o en tu propia infraestructura. El servidor escucha el puerto indicado por `PORT`.
 
+## 5. Vincular Spotify (opcional)
+La interfaz de H.D.P. incluye vinculación persistente de Spotify mediante Authorization Code con PKCE. Para habilitarla:
+1. Creá una aplicación en https://developer.spotify.com/dashboard.
+2. Copiá su **Client ID**.
+3. En `public/app.js` y `docs/app.js`, reemplazá `PEGAR_CLIENT_ID_DE_SPOTIFY` por ese Client ID.
+4. En la configuración de la aplicación de Spotify, agregá como Redirect URI exacta la URL de GitHub Pages, por ejemplo `https://benjacogley462.github.io/HDP/`.
+5. Publicá los cambios en GitHub Pages.
+
+La conexión se conserva en el navegador donde se autorizó y se restaura automáticamente al abrir H.D.P. Se usa PKCE; no se incorpora ni se solicita el Client Secret. El token de renovación se guarda en el almacenamiento local del navegador, por lo que no se debe usar en dispositivos compartidos. Spotify hace caducar los refresh tokens a los seis meses; cuando eso ocurra, el jugador deberá volver a vincular su cuenta. Esta primera etapa solo vincula y recuerda la cuenta: todavía no incorpora búsqueda, cola ni reproducción de canciones.
+
 ## 4. Cómo se juega
 1. Se necesitan entre 3 y 8 jugadores.
 2. Cada jugador recibe 10 cartas blancas; no se reponen.
