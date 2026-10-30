@@ -51,7 +51,7 @@ function renderLocal(){
 }
 function submitLocal(){if(selected<0)return;const p=game.players[localTurn];const card=p.hand.splice(selected,1)[0];game.submissions.push({ownerId:p.id,card,votes:0});selected=-1;localTurn++;if(localTurn<game.players.length){showPrivacy(game.players[localTurn].name);renderLocal();return}game.submissions=shuffle(game.submissions);game.phase='READING';readingIndex=0;localTurn=game.cantor;renderLocal()}
 function voteLocal(i){const voter=game.players[localVoteTurn];if(game.submissions[i].ownerId===voter.id)return toast('No podés votar tu propia carta.');game.votes[voter.id]=i;game.submissions[i].votes++;localVoteTurn++;if(localVoteTurn<game.players.length){showPrivacy(game.players[localVoteTurn].name);renderLocal();return}const max=Math.max(...game.submissions.map(s=>s.votes));game.submissions.filter(s=>s.votes===max).forEach(s=>{game.players.find(p=>p.id===s.ownerId).score++});game.phase='RESULTS';renderLocal()}
-function connect(){const url=SERVER_URL;try{ws=new WebSocket(url)}catch{return toast('No se pudo iniciar la conexión al servidor.')}ws.onopen=()=>{online.connected=true;setStatus('Conectado al servidor');toast(pendingAction==='CREATE'?'Creando sala…':'Conectado.');ws.send(JSON.stringify({type:pendingAction,name:$('playerName').value.trim()||'Jugador',code:$('roomCode').value.trim()}))};ws.onmessage=e=>{let d;try{d=JSON.parse(e.data)}catch{return}if(d.type==='ERROR'){toast(d.message);return}if(d.type==='JOINED'){online.playerId=d.playerId;online.roomCode=d.roomCode;online.host=d.host;show('roomInfo');$('roomInfo').textContent=`CÓDIGO DE SALA: ${d.roomCode} · Compartilo con tus amigos`;setStatus(`Sala ${d.roomCode}`);toast(d.host?'Sala creada. Esperá a tus amigos.':'Te uniste a la sala.');return}if(d.type==='STATE'){online.state=d.state;renderOnline(d.state)}};ws.onerror=()=>toast('No se pudo conectar. Revisá la URL y que el backend esté desplegado.');ws.onclose=()=>{online.connected=false;setStatus('Desconectado');toast('Se cerró la conexión con el servidor.')}}
+function connect(){const url=SERVER_URL;try{ws=new WebSocket(url)}catch{return toast('No se pudo iniciar la conexión al servidor.')}ws.onopen=()=>{online.connected=true;setStatus('Conectado al servidor');toast(pendingAction==='CREATE'?'Creando sala…':'Conectado.');ws.send(JSON.stringify({type:pendingAction,name:$('playerName').value.trim()||'Jugador',code:$('roomCode').value.trim()}))};ws.onmessage=e=>{let d;try{d=JSON.parse(e.data)}catch{return}if(d.type==='ERROR'){toast(d.message);return}if(d.type==='JOINED'){online.playerId=d.playerId;online.roomCode=d.roomCode;online.host=d.host;if(d.host){sendOnline('SET_DECK',{black:deckBlack,white:deckWhite});}show('roomInfo');$('roomInfo').textContent=`CÓDIGO DE SALA: ${d.roomCode} · Compartilo con tus amigos`;setStatus(`Sala ${d.roomCode}`);toast(d.host?'Sala creada. Esperá a tus amigos.':'Te uniste a la sala.');return}if(d.type==='STATE'){online.state=d.state;renderOnline(d.state)}};ws.onerror=()=>toast('No se pudo conectar. Revisá la URL y que el backend esté desplegado.');ws.onclose=()=>{online.connected=false;setStatus('Desconectado');toast('Se cerró la conexión con el servidor.')}}
 function createRoom(){pendingAction='CREATE';connect()}function joinRoom(){if(!$('roomCode').value.trim())return toast('Ingresá el código de sala.');pendingAction='JOIN';connect()}
 function roomInviteUrl(code){const u=new URL(window.location.href);u.search='';u.hash='';u.searchParams.set('sala',code);return u.toString()}
 async function shareRoom(){const code=online.roomCode||$('roomCode').value.trim().toUpperCase();if(!code)return toast('Todavía no hay un código de sala.');const url=roomInviteUrl(code);try{if(navigator.share){await navigator.share({title:'Unite a mi sala de H.D.P.',text:`Entrá a mi sala de H.D.P. con el código ${code}`,url});}else{await navigator.clipboard.writeText(url);toast('¡Enlace copiado! Mandáselo a tus amigos.')}}catch(err){if(err.name!=='AbortError'){try{await navigator.clipboard.writeText(url);toast('¡Enlace copiado!')}catch{toast('No se pudo compartir automáticamente. Código: '+code)}}}}
@@ -67,8 +67,8 @@ function openDeck(){
  if(mode==='online'){
   const s=online.state;
   if(!online.host||!s||s.phase!=='LOBBY')return toast('Solo el anfitrión puede editar el mazo antes de iniciar.');
-  $('blackEditor').value=(s.deck?.black||[]).join('\n');$('whiteEditor').value=(s.deck?.white||[]).join('\n');
-  $('deckModalHint').textContent='Este mazo se guarda en la sala y se comparte automáticamente con todos los jugadores.';
+  $('blackEditor').value=deckBlack.join('\n');$('whiteEditor').value=deckWhite.join('\n');
+  $('deckModalHint').textContent='Este es tu mazo personal guardado en este navegador. Al guardarlo, también se copia a la sala para todos.';
  }else{
   $('blackEditor').value=deckBlack.join('\n');$('whiteEditor').value=deckWhite.join('\n');
   $('deckModalHint').textContent='Las cartas se guardan en este navegador.';
@@ -80,11 +80,56 @@ function saveDeckEditor(){
  if(!b.length||!w.length)return toast('Agregá al menos una carta negra y una blanca.');
  if(mode==='online'){
   if(!online.host||online.state?.phase!=='LOBBY')return toast('Solo el anfitrión puede editar antes de iniciar.');
-  sendOnline('SET_DECK',{black:b,white:w});hide('deckModal');toast('Enviando el mazo a la sala…');
+  deckBlack=b;deckWhite=w;saveDeck();sendOnline('SET_DECK',{black:b,white:w});hide('deckModal');toast('Mazo personal guardado y enviado a la sala.');
  }else{
   deckBlack=b;deckWhite=w;saveDeck();hide('deckModal');toast('Mazo guardado en este dispositivo.');
  }
 }
+
+let loungeAudio=null,loungeTimer=null,loungeStep=0,loungeVolume=0.22;
+function loungeNote(freq,start,duration,type='sine',gain=0.025){
+ const ctx=loungeAudio.ctx,osc=ctx.createOscillator(),amp=ctx.createGain();
+ osc.type=type;osc.frequency.setValueAtTime(freq,start);
+ amp.gain.setValueAtTime(0.0001,start);amp.gain.exponentialRampToValueAtTime(gain,start+0.025);amp.gain.exponentialRampToValueAtTime(0.0001,start+duration);
+ osc.connect(amp);amp.connect(loungeAudio.master);osc.start(start);osc.stop(start+duration+0.04);
+}
+function loungeBeat(){
+ if(!loungeAudio||loungeAudio.ctx.state!=='running')return;
+ const ctx=loungeAudio.ctx,now=ctx.currentTime+0.04;
+ const chords=[[130.81,164.81,196,233.08],[110,130.81,164.81,196],[146.83,174.61,220,261.63],[98,123.47,146.83,185]];
+ const chord=chords[Math.floor(loungeStep/4)%4];
+ if(loungeStep%4===0)chord.forEach((f,i)=>loungeNote(f,now,1.65,'sine',0.009));
+ const bass=[65.41,98,87.31,110,73.42,110,61.74,92.5][loungeStep%8];
+ loungeNote(bass,now,0.42,'triangle',0.045);
+ if(loungeStep%2===1)loungeNote(bass*2,now+0.16,0.18,'triangle',0.018);
+ const melody=[392,440,523.25,493.88,440,392,349.23,392,440,523.25,587.33,523.25,493.88,440,392,349.23];
+ const f=melody[loungeStep%melody.length];
+ loungeNote(f,now+0.04,0.24,'sine',0.012);
+ // Soft brushed-snare texture and subdued room noise.
+ if(loungeStep%2===0){
+  const n=ctx.createBufferSource(),buf=ctx.createBuffer(1,Math.floor(ctx.sampleRate*0.12),ctx.sampleRate),data=buf.getChannelData(0);
+  for(let i=0;i<data.length;i++)data[i]=(Math.random()*2-1)*(1-i/data.length);
+  n.buffer=buf;const filter=ctx.createBiquadFilter();filter.type='lowpass';filter.frequency.value=1800;
+  const g=ctx.createGain();g.gain.value=0.006;n.connect(filter);filter.connect(g);g.connect(loungeAudio.master);n.start(now+0.02);
+ }
+ loungeStep++;
+}
+async function toggleLounge(){
+ const button=$('musicToggle');
+ try{
+  if(!loungeAudio){
+   const Ctx=window.AudioContext||window.webkitAudioContext;if(!Ctx)return toast('Tu navegador no admite música ambiental.');
+   const ctx=new Ctx(),master=ctx.createGain();master.gain.value=loungeVolume;master.connect(ctx.destination);loungeAudio={ctx,master};
+  }
+  if(loungeAudio.ctx.state==='running'){
+   await loungeAudio.ctx.suspend();clearInterval(loungeTimer);loungeTimer=null;button.textContent='♫ Música: apagada';
+  }else{
+   await loungeAudio.ctx.resume();loungeBeat();if(!loungeTimer)loungeTimer=setInterval(loungeBeat,600);button.textContent='♫ Música: encendida';
+  }
+ }catch(e){toast('No se pudo iniciar el audio en este navegador.');}
+}
+function setLoungeVolume(value){loungeVolume=Number(value);if(loungeAudio)loungeAudio.master.gain.setTargetAtTime(loungeVolume,loungeAudio.ctx.currentTime,0.08)}
+
 $('mode').addEventListener('change',switchMode);$('addName').onclick=()=>{if(localPlayers.length>=7)return toast('Máximo 8 jugadores contando al anfitrión.');localPlayers.push(`Jugador ${localPlayers.length+2}`);renderNames()};$('startLocal').onclick=startLocal;$('privacyOk').onclick=privacyOk;$('rulesBtn').onclick=()=>show('rules');$('closeRules').onclick=$('rulesOk').onclick=()=>hide('rules');$('createRoom').onclick=createRoom;$('joinRoom').onclick=joinRoom;$('deckBtn').onclick=()=>{if(mode==='online'&&(!online.host||online.state?.phase!=='LOBBY'))return toast('La edición del mazo está reservada al anfitrión antes de iniciar.');openDeck()};$('closeDeck').onclick=()=>hide('deckModal');$('saveDeck').onclick=saveDeckEditor;$('resetDeck').onclick=()=>{deckBlack=[...BASE_BLACK];deckWhite=[...BASE_WHITE];$('blackEditor').value=deckBlack.join('\n');$('whiteEditor').value=deckWhite.join('\n')};
-loadDeck();localPlayers=['Jugador 2','Jugador 3'];renderNames();switchMode();
+loadDeck();$('musicToggle').addEventListener('click',toggleLounge);$('musicVolume').addEventListener('input',e=>setLoungeVolume(e.target.value));localPlayers=['Jugador 2','Jugador 3'];renderNames();switchMode();
 const inviteCode=new URLSearchParams(window.location.search).get('sala');if(inviteCode){$('mode').value='online';switchMode();$('roomCode').value=inviteCode.toUpperCase().replace(/[^A-Z0-9]/g,'');$('joinRoom').textContent='Entrar a la sala';toast('Enlace de invitación detectado. Escribí tu nombre y entrá a la sala.');}
