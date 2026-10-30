@@ -132,7 +132,7 @@ function setLoungeVolume(value){loungeVolume=Number(value);if(loungeAudio)lounge
 
 $('spotifyConnect').addEventListener('click',connectSpotify);$('spotifyDisconnect').addEventListener('click',disconnectSpotify);initSpotify();
 
-const SPOTIFY_CLIENT_ID='PEGAR_CLIENT_ID_DE_SPOTIFY';
+const SPOTIFY_CLIENT_ID='68485778f4e642409532df69d59b89fb';
 const SPOTIFY_TOKEN_KEY='hdp-spotify-token-v1',SPOTIFY_VERIFIER_KEY='hdp-spotify-verifier-v1',SPOTIFY_STATE_KEY='hdp-spotify-state-v1';
 const spotifyRedirectUri=()=>window.location.origin+window.location.pathname;
 function spotifyConfigured(){return SPOTIFY_CLIENT_ID&&!SPOTIFY_CLIENT_ID.startsWith('PEGAR_')}
