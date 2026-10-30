@@ -6,3 +6,6 @@
 
 /* Controles de música siempre accesibles, incluso durante la partida. */
 .music-dock{position:fixed;right:18px;bottom:18px;z-index:1200;margin:0;padding:9px 12px;border:1px solid var(--line,#34343b);border-radius:14px;background:rgba(15,15,19,.96);box-shadow:0 8px 30px rgba(0,0,0,.4);backdrop-filter:blur(12px)}.music-dock-label{font-size:10px;font-weight:900;letter-spacing:.12em;color:var(--cyan)}.music-dock .btn{white-space:nowrap}.music-dock input{width:86px}@media(max-width:600px){.music-dock{right:10px;bottom:10px;padding:7px 9px;gap:6px}.music-dock input{width:64px}.music-dock .btn{padding:8px;font-size:10px}}
+
+/* Mantener el control de audio visible por encima de todas las pantallas. */
+.music-dock{display:flex!important;visibility:visible!important;opacity:1!important;position:fixed!important;z-index:2147483000!important;right:18px!important;bottom:18px!important;pointer-events:auto!important}
