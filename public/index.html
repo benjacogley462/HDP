@@ -14,6 +14,12 @@
 <main>
 <section id="setup" class="setup panel">
   <div class="hero"><p class="eyebrow">HUMOR NEGRO · AMIGOS · CAOS</p><h1>¿HASTA DÓNDE<br><em>PODÉS</em> LLEGAR?</h1><p>Completá la consigna. Bancate las respuestas. Elegí la peor… o la mejor.</p></div>
+
+<section class="spotify-link panel" aria-labelledby="spotifyTitle">
+<div class="spotify-copy"><p class="eyebrow">TU MÚSICA · TU CUENTA</p><h2 id="spotifyTitle">Vinculá tu Spotify</h2><p id="spotifyStatus" class="muted" aria-live="polite">Comprobando conexión…</p><p id="spotifyProfile" class="spotify-profile hidden"></p></div>
+<div class="spotify-actions"><button class="btn primary" id="spotifyConnect" type="button">Conectar Spotify</button><button class="btn secondary hidden" id="spotifyDisconnect" type="button">Desconectar</button></div>
+<p class="spotify-note">La conexión se recuerda en este navegador. No guardamos tu contraseña; podés desconectarla cuando quieras.</p>
+</section>
   <div class="setup-grid">
     <div class="field"><label for="playerName">Tu nombre</label><input id="playerName" maxlength="18" value="Jugador 1"></div>
     <div class="field"><label for="mode">Modo de juego</label><select id="mode"><option value="local">Pasa y juega · mismo dispositivo</option><option value="online">Online · salas y códigos</option></select></div>
